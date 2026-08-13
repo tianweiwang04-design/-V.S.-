@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>列車行駛方向投票｜中和新蘆線 大橋頭</title>
-<meta name="description" content="娛樂用途。大橋頭站分岔，投票決定下一班車開往蘆洲還是迴龍（實際上不會影響營運）。">
+<meta name="description" content="娛樂用途。大橋頭站分岔，大家一起即時投票決定下一班車開往蘆洲還是迴龍（實際上不會影響營運）。">
 <meta name="theme-color" content="#06080d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,14 +14,14 @@
 <link rel="icon" href="icon-192.png">
 <style>
 /* ══════════ 設計來源 ══════════
-   橘線識別色取自臺北捷運中和新蘆線路線標示（橘 #EF9C1E），
-   兩支線用同一種「金屬烤漆」質感的深淺變化區分，
+   橘線識別色取自臺北捷運中和新蘆線路線標示（橘 #EF9C1E）。
+   兩條支線用同一種「金屬烤漆」質感的深淺變化區分，
    而不是換成兩個不相干的色相 —— 它們本來就是同一條線。
    ═══════════════════════════ */
 :root{
   --lz:#ef9c1e; --lz-hi:#fbc76e; --lz-lo:#c87d0c;   /* 蘆洲三重線 */
   --hl:#b8871c; --hl-hi:#d9b264; --hl-lo:#8e6810;   /* 中和新蘆線（迴龍） */
-  --card:#fbfaf8; --ink:#14161a; --muted:#6b6f76; --line:#e5e3df;
+  --card:#fbfaf8; --ink:#14161a; --muted:#6b6f76;
   --sat:env(safe-area-inset-top,0px);
   --sab:env(safe-area-inset-bottom,0px);
   --sal:env(safe-area-inset-left,0px);
@@ -30,24 +30,20 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{overflow-x:hidden;-webkit-text-size-adjust:100%}
 body{
-  margin:0;min-height:100vh;min-height:100lvh;
-  overflow-x:hidden;
+  margin:0;min-height:100vh;min-height:100lvh;overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Helvetica Neue",Arial,sans-serif;
-  color:#fff;background:#06080d;
-  touch-action:manipulation;
+  color:#fff;background:#06080d;touch-action:manipulation;
   display:flex;flex-direction:column;align-items:center;
   padding:calc(14px + var(--sat)) calc(14px + var(--sar)) calc(34px + var(--sab)) calc(14px + var(--sal));
 }
 /* 背景獨立成固定圖層，不用 background-attachment:fixed（手機捲動會逐幀重算） */
-.bg{
-  position:fixed;inset:0;z-index:-1;pointer-events:none;
+.bg{position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:
     radial-gradient(1100px 620px at 18% -12%, rgba(239,156,30,.13) 0%, rgba(239,156,30,0) 62%),
     radial-gradient(900px 560px at 92% 108%, rgba(120,140,190,.13) 0%, rgba(120,140,190,0) 60%),
     linear-gradient(180deg,#0d1017 0%,#06080d 100%);
 }
-.bg::after{           /* 極淡網格，給空間感 */
-  content:"";position:absolute;inset:0;opacity:.25;
+.bg::after{content:"";position:absolute;inset:0;opacity:.25;
   background-image:
     linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
@@ -59,46 +55,37 @@ body{
 
 /* ── 狀態列 ── */
 .statusbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:2px 2px 12px}
-.pill{
-  display:inline-flex;align-items:center;gap:6px;flex:none;white-space:nowrap;
+.pill{display:inline-flex;align-items:center;gap:6px;flex:none;white-space:nowrap;
   background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13);
-  padding:5px 10px;border-radius:999px;font-size:12px;line-height:1;color:#c9ccd1;
-}
+  padding:5px 10px;border-radius:999px;font-size:12px;line-height:1;color:#c9ccd1;}
 .pill.ok{background:rgba(64,200,120,.15);border-color:rgba(64,200,120,.36);color:#a9f0c6}
 .pill.warn{background:rgba(255,180,60,.14);border-color:rgba(255,180,60,.36);color:#ffd79a}
+.pill.bad{background:rgba(255,95,95,.14);border-color:rgba(255,95,95,.36);color:#ffb3b3}
 .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.pill.ok .dot{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
 /* ── 主卡片 ── */
-.card{
-  background:var(--card);color:var(--ink);border-radius:26px;
-  padding:26px 18px 20px;
-  box-shadow:0 26px 64px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.7);
-}
+.card{background:var(--card);color:var(--ink);border-radius:26px;padding:26px 18px 20px;
+  box-shadow:0 26px 64px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.7);}
 h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0 6px;letter-spacing:.5px}
 .sub{font-size:13.5px;color:#565961;text-align:center;margin:0 0 20px;line-height:1.5}
 
 /* ── 選項按鈕（主角） ── */
-.opt{
-  position:relative;display:flex;align-items:center;gap:12px;width:100%;
+.opt{position:relative;display:flex;align-items:center;gap:12px;width:100%;
   border:none;cursor:pointer;font-family:inherit;text-align:left;color:#fff;
   border-radius:16px;padding:14px 16px 14px 12px;margin-bottom:13px;
   transition:transform .12s cubic-bezier(.2,.8,.3,1), box-shadow .18s, filter .18s;
-}
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.16), 0 2px 6px rgba(0,0,0,.2);}
 .opt>*{pointer-events:none}          /* 命中區域交給按鈕本身，內部元素不吃事件 */
 .opt.lz{background:linear-gradient(168deg,var(--lz-hi) 0%,#f2a52a 20%,var(--lz) 54%,var(--lz-lo) 100%)}
 .opt.hl{background:linear-gradient(168deg,var(--hl-hi) 0%,#c5942a 20%,var(--hl) 54%,var(--hl-lo) 100%)}
-.opt{box-shadow:inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.16), 0 2px 6px rgba(0,0,0,.2)}
 .opt:active{transform:scale(.982)}
-.opt[aria-checked="true"]{
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 0 0 3px var(--ink), 0 0 0 6px rgba(255,255,255,.18), 0 6px 18px rgba(0,0,0,.3);
-}
+.opt[aria-checked="true"]{box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 0 0 3px var(--ink), 0 0 0 6px rgba(255,255,255,.18), 0 6px 18px rgba(0,0,0,.3)}
 .opt:disabled{cursor:default;filter:saturate(.5) brightness(.94) opacity(.68)}
 .logo{flex:none;width:66px;display:flex;flex-direction:column;align-items:center;gap:5px}
-.glyph{
-  width:44px;height:44px;border-radius:50%;background:#fff;flex:none;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 1px 3px rgba(0,0,0,.22);
-}
+.glyph{width:44px;height:44px;border-radius:50%;background:#fff;flex:none;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.22)}
 .glyph i{display:block;width:24px;height:24px;border-radius:50%;border:6px solid currentColor}
 .opt.lz .glyph{color:var(--lz)} .opt.hl .glyph{color:var(--hl)}
 .lname{font-size:10px;line-height:1.28;text-align:center;font-weight:700;letter-spacing:.2px;text-shadow:0 1px 1px rgba(0,0,0,.18)}
@@ -110,85 +97,87 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
 .radio{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.95);position:relative;box-shadow:0 1px 2px rgba(0,0,0,.2)}
 .opt[aria-checked="true"] .radio::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#fff}
 
+/* ── 即時票數長條圖（投票中與開票後共用同一個元件） ── */
+.tally{margin:16px 0 2px}
+.tally .nums{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:7px}
+.tally .side{display:flex;align-items:baseline;gap:5px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.tally .side.r{flex-direction:row-reverse}
+.tally .side b{font-size:clamp(21px,6.6vw,26px);font-variant-numeric:tabular-nums;line-height:1}
+.tally .l{color:var(--lz-lo)} .tally .h{color:var(--hl-lo)}
+.tally .mid{font-size:11px;font-weight:600;color:var(--muted);text-align:center;flex:1;white-space:nowrap}
+.tally .bar{display:flex;height:16px;border-radius:9px;overflow:hidden;background:#e9e7e3;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.08)}
+.tally .seg{transition:width .55s cubic-bezier(.2,.9,.25,1)}
+.tally .seg.sl{background:linear-gradient(90deg,var(--lz-hi),var(--lz))}
+.tally .seg.sh{background:linear-gradient(90deg,var(--hl),var(--hl-lo))}
+.tally.zero .seg{background:#dedbd6}
+.tally .pcts{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;margin-top:6px}
+.tally .pcts .l{color:var(--lz-lo)} .tally .pcts .h{color:var(--hl-lo)}
+.tally.big .bar{height:22px;border-radius:12px}
+
 /* ── 倒數 / 送出 ── */
-.count{text-align:center;font-size:13px;color:#565961;margin:16px 0 11px;line-height:1.4}
+.count{text-align:center;font-size:13px;color:#565961;margin:14px 0 11px;line-height:1.4}
 .count b{color:var(--lz-lo);font-weight:800;font-size:clamp(20px,6vw,26px);margin:0 4px;font-variant-numeric:tabular-nums}
 .count.urgent b{color:#d33}
-.submit{
-  width:100%;border:none;border-radius:14px;padding:15px;font-family:inherit;
+.submit{width:100%;border:none;border-radius:14px;padding:15px;font-family:inherit;
   font-size:15.5px;font-weight:700;letter-spacing:2px;
-  background:#eceae6;color:#a3a5a9;cursor:not-allowed;transition:.18s;
-}
+  background:#eceae6;color:#a3a5a9;cursor:not-allowed;transition:.18s}
 .submit.on{background:var(--ink);color:#fff;cursor:pointer}
 .submit.on:active{transform:scale(.985)}
 .submit.done{background:#e7f4ea;color:#2c7745;cursor:default}
-.undo{
-  display:block;margin:9px auto 0;background:none;border:none;font-family:inherit;
-  font-size:12.5px;color:var(--muted);text-decoration:underline;cursor:pointer;padding:6px 10px;
-}
+.undo{display:block;margin:9px auto 0;background:none;border:none;font-family:inherit;
+  font-size:12.5px;color:var(--muted);text-decoration:underline;cursor:pointer;padding:6px 10px}
 
 /* ── 開票結果 ── */
-.bar{margin-bottom:15px}
-.bar .top{display:flex;justify-content:space-between;align-items:baseline;font-size:14.5px;font-weight:700;margin-bottom:6px}
-.bar .top em{font-style:normal;font-variant-numeric:tabular-nums}
-.bar .track{height:14px;border-radius:8px;background:#eae8e4;overflow:hidden}
-.bar .fill{height:100%;border-radius:8px;width:0;transition:width .7s cubic-bezier(.2,.9,.25,1)}
-.bar.lz .fill{background:linear-gradient(90deg,var(--lz-hi),var(--lz))} .bar.lz .top{color:var(--lz-lo)}
-.bar.hl .fill{background:linear-gradient(90deg,var(--hl-hi),var(--hl))} .bar.hl .top{color:var(--hl-lo)}
 .verdict{margin-top:16px;padding:16px 14px;border-radius:14px;background:#f1efeb;text-align:center}
 .verdict .big{font-size:clamp(17px,5vw,21px);font-weight:800;margin-bottom:6px;line-height:1.35}
 .verdict .note{font-size:12.5px;color:var(--muted);line-height:1.65}
 .youvoted{font-size:12px;color:var(--muted);text-align:center;margin:11px 0 0}
 
-/* ── 面板通用 ── */
-.panel{
-  margin-top:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
-  border-radius:16px;padding:14px;font-size:13px;color:#dfe2e6;
-}
+/* ── 尚未設定後端時的引導 ── */
+.setup{color:var(--ink);font-size:13.5px;line-height:1.85}
+.setup h2{font-size:16px;margin:0 0 10px;font-weight:800}
+.setup ol{margin:0 0 14px;padding-left:20px}
+.setup code{background:#eae7e2;padding:1px 5px;border-radius:4px;font-size:12px;
+  font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.setup .why{background:#f1efeb;border-radius:12px;padding:12px;font-size:12.5px;color:var(--muted);margin:0 0 14px}
+
+/* ── 面板 ── */
+.panel{margin-top:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;padding:14px;font-size:13px;color:#dfe2e6}
 .panel h3,.panel summary{margin:0;font-size:10.5px;letter-spacing:2px;color:#969ca4;font-weight:700}
 .panel summary{cursor:pointer;list-style:none}
 .panel summary::-webkit-details-marker{display:none}
 .panel summary::before{content:"▸ "}
 .panel[open] summary::before{content:"▾ "}
-
-/* 下一班預告 */
 .upcoming{display:flex;gap:8px;margin-top:10px}
-.up{
-  flex:1;border-radius:12px;padding:10px 8px;text-align:center;
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);
-}
+.up{flex:1;border-radius:12px;padding:10px 8px;text-align:center;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09)}
 .up .t{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
 .up .d{font-size:11px;font-weight:700;margin-top:3px}
 .up.L .d{color:var(--lz-hi)} .up.H .d{color:var(--hl-hi)}
 .up .k{font-size:9.5px;color:#868c94;letter-spacing:1px;margin-bottom:4px}
-
-/* 歷史 */
 .score{display:flex;gap:8px;margin:10px 0 11px}
 .score div{flex:1;border-radius:12px;padding:9px;text-align:center;font-weight:800;font-size:19px;color:#fff}
 .score div span{display:block;font-size:10px;font-weight:600;opacity:.92;letter-spacing:1px;margin-bottom:2px}
 .score .s-lz{background:linear-gradient(160deg,var(--lz-hi),var(--lz-lo))}
 .score .s-hl{background:linear-gradient(160deg,var(--hl-hi),var(--hl-lo))}
 .hlist{max-height:220px;overflow:auto;font-size:12.5px;-webkit-overflow-scrolling:touch}
-.hrow{display:grid;grid-template-columns:50px 1fr auto;gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,.07);color:#cfd3d8}
+.hrow{display:grid;grid-template-columns:50px 1fr auto;gap:8px;align-items:center;
+  padding:6px 0;border-top:1px solid rgba(255,255,255,.07);color:#cfd3d8}
 .hrow:first-child{border-top:none}
 .hrow .tm{font-variant-numeric:tabular-nums;color:#969ca4}
 .hrow .w{font-weight:700}
 .hrow .w.L{color:var(--lz-hi)} .hrow .w.H{color:var(--hl-hi)}
 .hrow .n{color:#868c94;font-variant-numeric:tabular-nums}
 .empty{color:#868c94;font-size:12.5px;padding:8px 0}
-
-/* 設定 */
 .panel .body{margin-top:12px;display:flex;flex-direction:column;gap:9px}
 .panel label{font-size:11px;color:#969ca4;display:block;margin-bottom:3px}
-.panel input[type=text],.panel input[type=password]{
-  width:100%;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.14);
-  color:#fff;border-radius:9px;padding:10px;font-size:16px;   /* 16px 防 iOS 聚焦自動放大 */
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-}
-.btn{
-  all:unset;cursor:pointer;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.17);
-  border-radius:10px;padding:11px 14px;text-align:center;font-size:13px;font-weight:600;
-}
+.panel input[type=text],.panel input[type=password]{width:100%;background:rgba(0,0,0,.32);
+  border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:10px;
+  font-size:16px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}   /* 16px 防 iOS 聚焦放大 */
+.btn{all:unset;cursor:pointer;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.17);
+  border-radius:10px;padding:11px 14px;text-align:center;font-size:13px;font-weight:600}
 .btn:active{background:rgba(255,255,255,.22)}
 .hint{font-size:11px;color:#868c94;line-height:1.7;margin:0}
 .switch{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -208,25 +197,26 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
   .glyph{width:40px;height:40px}
   .glyph i{width:21px;height:21px;border-width:5px}
 }
-/* ══ 橫向且矮 → 專注模式：只留投票，次要面板收起 ══
-   （放在最後，才不會被上面的手機規則覆蓋） ══ */
+/* ══ 橫向且矮 → 專注模式（放最後，才不會被上面的手機規則覆蓋） ══ */
 @media (orientation:landscape) and (max-height:560px){
   body{padding-top:calc(8px + var(--sat));padding-bottom:calc(10px + var(--sab))}
-  .wrap{max-width:540px}
+  .wrap{max-width:560px}
   .statusbar{margin-bottom:8px}
-  .card{padding:14px 14px 12px;border-radius:18px}
-  h1{font-size:17px;margin-bottom:2px}
-  .sub{font-size:11.5px;margin-bottom:10px}
-  .opt{padding:8px 12px 8px 8px;margin-bottom:8px;border-radius:13px}
-  .dest b{font-size:22px}
-  .dest span{font-size:11px}
-  .logo{width:52px}
-  .glyph{width:32px;height:32px}
-  .glyph i{width:16px;height:16px;border-width:4px}
-  .lname{font-size:8.5px}.lname small{display:none}
-  .count{margin:9px 0 7px;font-size:11.5px}
-  .count b{font-size:19px}
-  .submit{padding:11px;font-size:14px}
+  .card{padding:13px 14px 11px;border-radius:18px}
+  h1{font-size:16px;margin-bottom:2px}
+  .sub{font-size:11px;margin-bottom:9px}
+  .opt{padding:7px 12px 7px 8px;margin-bottom:7px;border-radius:13px}
+  .dest b{font-size:21px} .dest span{font-size:10.5px}
+  .logo{width:50px}
+  .glyph{width:30px;height:30px}
+  .glyph i{width:15px;height:15px;border-width:4px}
+  .lname{font-size:8px} .lname small{display:none}
+  .tally{margin:9px 0 0} .tally .bar{height:11px}
+  .tally .side b{font-size:18px} .tally .pcts{display:none}
+  .count{margin:8px 0 6px;font-size:11px}
+  .count b{font-size:18px}
+  .submit{padding:10px;font-size:13.5px}
+  .undo{margin-top:5px;font-size:11.5px;padding:3px}
   #upcomingPanel,#histPanel,#settings,.foot{display:none}
 }
 </style>
@@ -237,15 +227,17 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
 
   <div class="statusbar">
     <span class="pill" id="pConn"><span class="dot"></span><span id="connTxt">連線中…</span></span>
+    <span class="pill" id="pOnline" hidden>—</span>
     <span class="pill" id="pDay">—</span>
     <span class="pill" id="pSrc">內建時刻表</span>
   </div>
 
   <div class="card">
     <h1>列車行駛方向投票</h1>
-    <p class="sub" id="subtitle">請選擇待會的行駛方向</p>
+    <p class="sub" id="subtitle">連線中…</p>
 
-    <div id="voteView">
+    <!-- ① 投票中 -->
+    <div id="voteView" hidden>
       <button class="opt lz" id="optL" role="radio" aria-checked="false" aria-label="投給往蘆洲">
         <span class="logo"><span class="glyph"><i></i></span><span class="lname">蘆洲三重線<small>Luzhou<br>Line</small></span></span>
         <span class="dest"><b>往蘆洲</b><span>To Luzhou</span></span>
@@ -257,25 +249,49 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
         <span class="radio"></span>
       </button>
 
+      <div class="tally zero" id="tallyLive">
+        <div class="nums">
+          <span class="side l"><b id="numL">0</b>往蘆洲</span>
+          <span class="mid" id="numMid">還沒有人投票</span>
+          <span class="side r h"><b id="numH">0</b>往迴龍</span>
+        </div>
+        <div class="bar"><div class="seg sl" id="segL"></div><div class="seg sh" id="segH"></div></div>
+      </div>
+
       <p class="count" id="countdown">投票將於 <b>--</b> 秒後結束</p>
       <button class="submit" id="submitBtn" disabled>請先選擇往蘆洲或往迴龍</button>
       <button class="undo" id="undoBtn" hidden>取消我這票</button>
     </div>
 
+    <!-- ② 開票 -->
     <div id="resView" hidden>
-      <div class="bar lz">
-        <div class="top"><span>往蘆洲 To Luzhou</span><em id="pctL">0%</em></div>
-        <div class="track"><div class="fill" id="fillL"></div></div>
-      </div>
-      <div class="bar hl">
-        <div class="top"><span>往迴龍 To Huilong</span><em id="pctH">0%</em></div>
-        <div class="track"><div class="fill" id="fillH"></div></div>
+      <div class="tally big zero" id="tallyRes">
+        <div class="nums">
+          <span class="side l"><b id="rNumL">0</b>往蘆洲</span>
+          <span class="mid" id="rNumMid">共 0 票</span>
+          <span class="side r h"><b id="rNumH">0</b>往迴龍</span>
+        </div>
+        <div class="bar"><div class="seg sl" id="rSegL"></div><div class="seg sh" id="rSegH"></div></div>
+        <div class="pcts"><span class="l" id="rPctL">0%</span><span class="h" id="rPctH">0%</span></div>
       </div>
       <div class="verdict">
         <div class="big" id="vBig">開票中…</div>
         <div class="note" id="vNote"></div>
       </div>
       <p class="youvoted" id="youVoted"></p>
+    </div>
+
+    <!-- ③ 尚未設定後端 -->
+    <div id="setupView" class="setup" hidden>
+      <h2>還沒接上共用資料庫</h2>
+      <p class="why">這個網頁是給大家<b>一起即時投票</b>用的，所以票數必須存在一個共用的地方。沒有它的話，你只會看到自己那一票，投票也就沒有意義了。</p>
+      <ol>
+        <li>到 <code>console.firebase.google.com</code> 建一個專案</li>
+        <li><b>Build → Realtime Database → 建立資料庫</b>，位置選 <code>asia-southeast1</code></li>
+        <li><b>專案設定 → 一般 → 新增網頁應用程式</b>，抄下 <code>apiKey</code> 和資料庫網址</li>
+        <li>把兩個值填進 <code>index.html</code> 最上面的 <code>FIREBASE</code>，重新部署</li>
+      </ol>
+      <p class="why" style="margin-bottom:0">想先試試看的話，也可以展開下面的「設定」暫時填進去 —— 但那只存在你這台裝置，正式上線還是要寫進原始碼，別人打開才會生效。</p>
     </div>
   </div>
 
@@ -302,16 +318,16 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
     <summary>設定</summary>
     <div class="body">
       <div class="switch">
-        <span>示範模式（每 45 秒一輪，隨時可玩）</span>
+        <span>示範模式（每 45 秒一輪，測試用）</span>
         <input type="checkbox" id="demoChk">
       </div>
-      <p class="hint">末班車過後或想測試時打開。示範模式的票不會寫進正式紀錄。</p>
+      <p class="hint">末班車過後想測試時打開。示範模式的票不會寫進正式紀錄，而且只有同樣打開的人會在同一輪裡。</p>
       <hr style="border:none;border-top:1px solid rgba(255,255,255,.1);margin:3px 0">
-      <div><label>Firebase Realtime Database URL（多人共享計票）</label>
+      <div><label>Firebase Realtime Database URL（本機覆寫）</label>
         <input type="text" id="fbUrl" placeholder="https://xxx-default-rtdb.asia-southeast1.firebasedatabase.app" spellcheck="false" autocapitalize="off"></div>
-      <div><label>Firebase API Key</label>
+      <div><label>Firebase API Key（本機覆寫）</label>
         <input type="text" id="fbKey" placeholder="AIza..." spellcheck="false" autocapitalize="off"></div>
-      <p class="hint">兩欄都填才會啟用多人模式。沒填就是離線模式，票只存在你自己的瀏覽器。設定存在 localStorage。</p>
+      <p class="hint">正式上線請寫進 <code>index.html</code> 的 <code>FIREBASE</code>，這裡只是本機測試用的覆寫。</p>
 
       <div id="tdxBox" hidden>
         <hr style="border:none;border-top:1px solid rgba(255,255,255,.1);margin:9px 0">
@@ -335,44 +351,56 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
 </div>
 
 <script type="module">
+/* ═══════════════════════════════════════════════════════════
+   ★ 部署前把這兩個值填好，所有人才會共用同一份票數 ★
+   Firebase 主控台 → 專案設定 → 一般 → 你的應用程式
+   ═══════════════════════════════════════════════════════════ */
+const FIREBASE = {
+  databaseURL: "",   // 例：https://your-project-default-rtdb.asia-southeast1.firebasedatabase.app
+  apiKey:      "",   // 例：AIzaSy...
+};
+
 /* ═══════════ 0. 設定與工具 ═══════════ */
-const PFX = 'lzv_';
-const LS = {
+const PFX='lzv_';
+const LS={
   get:(k,d='')=>{try{return localStorage.getItem(PFX+k) ?? d}catch(e){return d}},
   set:(k,v)=>{try{localStorage.setItem(PFX+k,v)}catch(e){}},
 };
-const CFG = {
-  fbUrl:LS.get('fbUrl'), fbKey:LS.get('fbKey'),
+// localStorage 只作為本機覆寫，正式值來自上面的 FIREBASE
+const CFG={
+  fbUrl: LS.get('fbUrl') || FIREBASE.databaseURL,
+  fbKey: LS.get('fbKey') || FIREBASE.apiKey,
   tdxId:LS.get('tdxId'), tdxSec:LS.get('tdxSec'), proxy:LS.get('proxy'),
-  demo:LS.get('demo')==='1',
+  demo: LS.get('demo')==='1',
 };
-let UID = LS.get('uid');
+let UID=LS.get('uid');
 if(!UID){ UID='u'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4); LS.set('uid',UID); }
 
-const VOTE_CLOSE_LEAD = 30;   // 發車前 30 秒截止
-const RESULT_HOLD     = 45;   // 發車後續顯示結果 45 秒
-const DEMO_ROUND      = 45;
+const VOTE_CLOSE_LEAD=30;   // 發車前 30 秒截止
+const RESULT_HOLD=45;       // 發車後續顯示結果 45 秒
+const DEMO_ROUND=45;
+const PRESENCE_TTL=90000;   // 90 秒內有心跳才算在線
 
 /* ═══════════ 1. 大橋頭站北向時刻表（L=往蘆洲 H=往迴龍）
    來源：臺北捷運官方大橋頭站時刻表，2026-05-11 生效
    平日 278 班（139:139）、假日 234 班（117:117）
    ═══════════ */
-const TT = {
+const TT={
   weekday:"0602L,0606H,0609L,0615H,0620L,0624H,0628L,0633H,0638L,0642H,0648L,0653H,0658L,0703H,0707L,0711H,0715L,0719H,0723L,0727H,0730L,0737H,0739L,0742H,0745L,0748H,0751L,0754H,0758L,0800H,0804L,0806H,0809L,0812H,0816L,0818H,0822L,0825H,0828L,0831H,0834L,0837H,0840L,0843H,0846L,0848H,0851L,0854H,0857L,0859H,0902L,0904H,0907L,0909H,0912L,0914H,0917L,0919H,0922L,0924H,0927L,0930H,0932L,0935H,0939L,0941H,0944L,0947H,0951L,0954H,0959L,1003H,1008L,1012H,1016L,1020H,1025L,1029H,1034L,1038H,1042L,1047H,1051L,1056H,1100L,1104H,1109L,1113H,1116L,1121H,1126L,1131H,1136L,1141H,1145L,1150H,1155L,1200H,1205L,1210H,1214L,1219H,1224L,1229H,1234L,1239H,1243L,1248H,1253L,1258H,1303L,1308H,1312L,1317H,1322L,1327H,1332L,1337H,1341L,1346H,1351L,1356H,1401L,1406H,1410L,1415H,1420L,1425H,1430L,1435H,1439L,1444H,1449L,1454H,1459L,1504H,1508L,1513H,1518L,1523H,1528L,1533H,1537L,1542H,1547L,1552H,1557L,1602H,1606L,1611H,1616L,1621H,1626L,1631H,1635L,1640H,1645L,1650H,1655L,1658H,1702L,1705H,1708L,1711H,1714L,1717H,1721L,1724H,1727L,1730H,1733L,1736H,1740L,1743H,1746L,1749H,1752L,1755H,1759L,1802H,1805L,1808H,1811L,1814H,1818L,1821H,1824L,1827H,1830L,1833H,1837L,1840H,1843L,1846H,1849L,1852H,1856L,1859H,1902L,1905H,1908L,1911H,1914L,1918H,1920L,1924H,1927L,1930H,1933L,1936H,1940L,1943H,1946L,1949H,1952L,1956H,1959L,2003H,2007L,2012H,2016L,2020H,2025L,2029H,2033L,2038H,2042L,2046H,2051L,2055H,2059L,2104H,2108L,2112H,2117L,2121H,2125L,2130H,2134L,2138H,2143L,2147H,2152L,2156H,2201L,2204H,2209L,2213H,2217L,2222H,2227L,2230H,2235L,2239H,2243L,2248H,2251L,2255H,2300L,2305H,2310L,2315H,2320L,2324H,2330L,2336H,2342L,2348H,2354L,0000H,0006L,0012H,0018L,0024H,0027L,0032H,0045L,0048H",
   holiday:"0602L,0606H,0609L,0615H,0620L,0624H,0628L,0632H,0637L,0642H,0647L,0652H,0656L,0701H,0706L,0711H,0715L,0720H,0725L,0730H,0734L,0739H,0744L,0749H,0754L,0758H,0803L,0808H,0813L,0817H,0822L,0827H,0832L,0837H,0841L,0846H,0851L,0856H,0901L,0905H,0910L,0915H,0920L,0924H,0929L,0934H,0939L,0944H,0948L,0953H,0958L,1003H,1007L,1012H,1017L,1022H,1026L,1031H,1036L,1041H,1046L,1050H,1055L,1100H,1105L,1109H,1114L,1119H,1124L,1129H,1133L,1138H,1143L,1148H,1153L,1157H,1202L,1207H,1212L,1216H,1221L,1226H,1231L,1236H,1240L,1245H,1250L,1255H,1259L,1304H,1309L,1314H,1319L,1323H,1328L,1333H,1338L,1343H,1347L,1352H,1357L,1402H,1406L,1411H,1416L,1421H,1426L,1430H,1435L,1440H,1445L,1449H,1454L,1459H,1504L,1509H,1513L,1518H,1523L,1528H,1533L,1537H,1542L,1547H,1552L,1556H,1601L,1606H,1611L,1616H,1620L,1625H,1630L,1635H,1640L,1644H,1649L,1654H,1659L,1703H,1708L,1713H,1718L,1723H,1727L,1732H,1737L,1742H,1746L,1751H,1756L,1801H,1806L,1810H,1815L,1820H,1825L,1830H,1834L,1839H,1844L,1849H,1853L,1858H,1903L,1908H,1913L,1917H,1922L,1927H,1932L,1936H,1941L,1946H,1951L,1956H,2000L,2005H,2010L,2015H,2020L,2024H,2029L,2034H,2039L,2043H,2048L,2053H,2058L,2103H,2107L,2112H,2117L,2122H,2127L,2132H,2137L,2141H,2146L,2151H,2156L,2200H,2205L,2210H,2215L,2220H,2224L,2229H,2234L,2239H,2243L,2248H,2253L,2258H,2303L,2307H,2312L,2317H,2322L,2324H,2330L,2336H,2342L,2348H,2354L,0000H,0006L,0012H,0018L,0024H,0027L,0032H,0045L,0048H",
 };
-const parseTT = s => s.split(',').map(x=>({h:+x.slice(0,2),m:+x.slice(2,4),dest:x[4]}));
-const TTP = { weekday:parseTT(TT.weekday), holiday:parseTT(TT.holiday) };
+const parseTT=s=>s.split(',').map(x=>({h:+x.slice(0,2),m:+x.slice(2,4),dest:x[4]}));
+const TTP={weekday:parseTT(TT.weekday), holiday:parseTT(TT.holiday)};
 
-const pad = n => String(n).padStart(2,'0');
-const ymd = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
-const hm  = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+const hm =d=>`${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
 function serviceDay(now){                 // 凌晨 04:00 前算前一個營運日
   const d=new Date(now); if(d.getHours()<4) d.setDate(d.getDate()-1);
   d.setHours(0,0,0,0); return d;
 }
-const isHoliday = sd => sd.getDay()===0 || sd.getDay()===6;
+const isHoliday=sd=>sd.getDay()===0||sd.getDay()===6;
 
 function departures(now){
   const sd=serviceDay(now), key=isHoliday(sd)?'holiday':'weekday';
@@ -387,7 +415,7 @@ function currentRound(now=new Date()){
   if(CFG.demo){
     const n=Math.floor(now.getTime()/1000/DEMO_ROUND), at=new Date((n+1)*DEMO_ROUND*1000);
     return {id:'demo-'+n, at, dest:n%2?'H':'L', demo:true,
-            closeAt:new Date(at-10000), endAt:new Date(+at+12000)};
+            closeAt:new Date(+at-10000), endAt:new Date(+at+12000)};
   }
   for(const d of departures(now)){
     const endAt=new Date(+d.at+RESULT_HOLD*1000);
@@ -399,58 +427,54 @@ function currentRound(now=new Date()){
   }
   return null;
 }
-function upcoming(now,n=3){
-  return departures(now).filter(d=>d.at>now).slice(0,n);
-}
+const upcoming=(now,n=3)=>departures(now).filter(d=>d.at>now).slice(0,n);
 
-/* ═══════════ 2. 儲存後端 ═══════════ */
-const Store = {
-  mode:'local', ROOT:'luzhouVote', _subs:{}, _hcb:null,
-  _k:k=>PFX+'local_'+k,
+/* ═══════════ 2. 共用資料庫（Firebase Realtime Database）
+   沒有離線退路：這是一個大家一起投票的網頁，只存自己一票沒有意義。
+   ═══════════ */
+const Store={
+  ready:false, err:null, ROOT:'luzhouVote',
   async init(){
-    if(!CFG.fbUrl || !CFG.fbKey) return this.mode='local';
+    if(!CFG.fbUrl || !CFG.fbKey){ this.err='未設定'; return false; }
     try{
-      const [{initializeApp},{getDatabase,ref,onValue,set,remove}] = await Promise.all([
+      const [{initializeApp},{getDatabase,ref,onValue,set,remove,onDisconnect,serverTimestamp}] = await Promise.all([
         import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
         import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'),
       ]);
-      const app=initializeApp({apiKey:CFG.fbKey,databaseURL:CFG.fbUrl});
-      Object.assign(this,{db:getDatabase(app),ref,onValue,set,remove});
-      this.mode='cloud';
-    }catch(e){ console.warn('Firebase 初始化失敗，改用離線模式',e); this.mode='local'; }
-    return this.mode;
+      const app=initializeApp({apiKey:CFG.fbKey, databaseURL:CFG.fbUrl});
+      Object.assign(this,{db:getDatabase(app),ref,onValue,set,remove,onDisconnect,serverTimestamp});
+      this.ready=true;
+      this._presence();
+      return true;
+    }catch(e){
+      console.error('Firebase 初始化失敗',e);
+      this.err=e.message||'連線失敗';
+      return false;
+    }
   },
-  async vote(rid,dest){
-    if(this.mode==='cloud') return this.set(this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes/${UID}`),dest);
-    const k=this._k('r_'+rid), o=JSON.parse(localStorage.getItem(k)||'{}');
-    o[UID]=dest; localStorage.setItem(k,JSON.stringify(o)); this._subs[rid]?.(o);
+  _presence(){
+    const me=this.ref(this.db,`${this.ROOT}/presence/${UID}`);
+    const beat=()=>this.set(me,Date.now()).catch(()=>{});
+    this.onDisconnect(me).remove();
+    beat(); setInterval(beat,30000);
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) beat(); });
   },
-  async unvote(rid){
-    if(this.mode==='cloud') return this.remove(this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes/${UID}`));
-    const k=this._k('r_'+rid), o=JSON.parse(localStorage.getItem(k)||'{}');
-    delete o[UID]; localStorage.setItem(k,JSON.stringify(o)); this._subs[rid]?.(o);
+  watchOnline(cb){
+    if(!this.ready) return ()=>{};
+    return this.onValue(this.ref(this.db,`${this.ROOT}/presence`),s=>{
+      const o=s.val()||{}, now=Date.now();
+      cb(Object.values(o).filter(t=>typeof t==='number' && now-t<PRESENCE_TTL).length);
+    });
   },
-  watch(rid,cb){
-    if(this.mode==='cloud') return this.onValue(this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes`),s=>cb(s.val()||{}));
-    this._subs[rid]=cb; cb(JSON.parse(localStorage.getItem(this._k('r_'+rid))||'{}'));
-    return ()=>{delete this._subs[rid]};
-  },
-  async saveHistory(rid,rec){
-    if(this.mode==='cloud') return this.set(this.ref(this.db,`${this.ROOT}/history/${rec.day}/${rid}`),rec);
-    const k=this._k('h_'+rec.day), o=JSON.parse(localStorage.getItem(k)||'{}');
-    o[rid]=rec;
-    const keys=Object.keys(o); if(keys.length>400) keys.sort().slice(0,keys.length-400).forEach(x=>delete o[x]);
-    localStorage.setItem(k,JSON.stringify(o)); this._hcb?.(o);
-  },
-  watchHistory(day,cb){
-    if(this.mode==='cloud') return this.onValue(this.ref(this.db,`${this.ROOT}/history/${day}`),s=>cb(s.val()||{}));
-    this._hcb=cb; cb(JSON.parse(localStorage.getItem(this._k('h_'+day))||'{}'));
-    return ()=>{this._hcb=null};
-  },
+  vote(rid,dest){ return this.set(this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes/${UID}`),dest); },
+  unvote(rid){   return this.remove(this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes/${UID}`)); },
+  watch(rid,cb){ return this.onValue(this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes`),s=>cb(s.val()||{})); },
+  saveHistory(rid,rec){ return this.set(this.ref(this.db,`${this.ROOT}/history/${rec.day}/${rid}`),rec); },
+  watchHistory(day,cb){ return this.onValue(this.ref(this.db,`${this.ROOT}/history/${day}`),s=>cb(s.val()||{})); },
 };
 
-/* ═══════════ 3. TDX（隱藏功能，網址加 #tdx 開啟） ═══════════ */
-const TDX = {
+/* ═══════════ 3. TDX（隱藏功能，網址加 #tdx） ═══════════ */
+const TDX={
   token:null, exp:0,
   url(u){ return CFG.proxy ? CFG.proxy+u : u; },
   async auth(){
@@ -484,27 +508,48 @@ const TDX = {
 };
 
 /* ═══════════ 4. UI ═══════════ */
-const $ = id => document.getElementById(id);
-const NAME = {L:'蘆洲', H:'迴龍'};
-let round=null, picked=null, myVote=null, votes={}, unwatch=null, unwatchH=null, historyDay=null;
-let renderedFor=null, savedFor=null;
+const $=id=>document.getElementById(id);
+const NAME={L:'蘆洲',H:'迴龍'};
+let round=null, picked=null, myVote=null, votes={};
+let unwatch=null, unwatchH=null, historyDay=null, renderedFor=null, savedFor=null;
+
+/* ── 即時票數（投票中與開票後共用） ── */
+function tally(){
+  let L=0,H=0;
+  for(const k in votes){ if(votes[k]==='L')L++; else if(votes[k]==='H')H++; }
+  return {L,H,total:L+H};
+}
+function renderTally(){
+  const {L,H,total}=tally();
+  const pL = total ? L/total*100 : 50;
+  const pLr= total ? Math.round(pL) : 0;
+
+  $('numL').textContent=L; $('numH').textContent=H;
+  $('numMid').textContent = total ? `即時票數・共 ${total} 票` : '還沒有人投票';
+  $('segL').style.width=pL+'%'; $('segH').style.width=(100-pL)+'%';
+  $('tallyLive').classList.toggle('zero', total===0);
+
+  $('rNumL').textContent=L; $('rNumH').textContent=H;
+  $('rNumMid').textContent=`共 ${total} 票`;
+  $('rSegL').style.width=pL+'%'; $('rSegH').style.width=(100-pL)+'%';
+  $('rPctL').textContent=pLr+'%'; $('rPctH').textContent=(total?100-pLr:0)+'%';
+  $('tallyRes').classList.toggle('zero', total===0);
+}
 
 function pick(v){
   if(!round || new Date()>=round.closeAt) return;
   picked=v;
-  $('optL').setAttribute('aria-checked', String(v==='L'));
-  $('optH').setAttribute('aria-checked', String(v==='H'));
+  $('optL').setAttribute('aria-checked',String(v==='L'));
+  $('optH').setAttribute('aria-checked',String(v==='H'));
   const b=$('submitBtn');
-  b.className='submit on'; b.disabled=false;
-  b.textContent = (myVote===v) ? `已投「往${NAME[v]}」` : (myVote ? `改投「往${NAME[v]}」` : `確認投「往${NAME[v]}」`);
-  b.disabled = (myVote===v);
-  if(myVote===v) b.className='submit done';
+  if(myVote===v){ b.className='submit done'; b.disabled=true; b.textContent=`已投「往${NAME[v]}」✓`; }
+  else{ b.className='submit on'; b.disabled=false; b.textContent = myVote?`改投「往${NAME[v]}」`:`確認投「往${NAME[v]}」`; }
 }
 $('optL').addEventListener('click',()=>pick('L'));
 $('optH').addEventListener('click',()=>pick('H'));
 
-$('submitBtn').addEventListener('click', async ()=>{
-  if(!picked || !round) return;
+$('submitBtn').addEventListener('click',async()=>{
+  if(!picked||!round) return;
   const b=$('submitBtn'); b.disabled=true; b.textContent='送出中…';
   try{
     await Store.vote(round.id,picked);
@@ -516,7 +561,7 @@ $('submitBtn').addEventListener('click', async ()=>{
     b.className='submit on'; b.disabled=false; b.textContent='送出失敗，再按一次';
   }
 });
-$('undoBtn').addEventListener('click', async ()=>{
+$('undoBtn').addEventListener('click',async()=>{
   if(!round) return;
   try{
     await Store.unvote(round.id);
@@ -539,10 +584,11 @@ function switchRound(r){
   $('voteView').hidden=false; $('resView').hidden=true;
   $('subtitle').textContent = r.demo ? '示範模式・請選擇待會的行駛方向'
                                      : `${hm(r.at)} 這班・請選擇待會的行駛方向`;
-  unwatch = Store.watch(r.id, v=>{
+  renderTally();
+  unwatch=Store.watch(r.id,v=>{
     votes=v||{};
-    if(votes[UID] && myVote!==votes[UID]){ myVote=votes[UID]; picked=myVote; }
-    if(myVote){
+    if(votes[UID] && myVote!==votes[UID]){
+      myVote=votes[UID]; picked=myVote;
       $('optL').setAttribute('aria-checked',String(myVote==='L'));
       $('optH').setAttribute('aria-checked',String(myVote==='H'));
       if(new Date()<round.closeAt){
@@ -551,22 +597,8 @@ function switchRound(r){
         $('undoBtn').hidden=false;
       }
     }
-    renderCounts();
+    renderTally();
   });
-}
-
-const tally = ()=>{
-  let L=0,H=0;
-  for(const k in votes){ if(votes[k]==='L')L++; else if(votes[k]==='H')H++; }
-  return {L,H,total:L+H};
-};
-function renderCounts(){
-  const {L,H,total}=tally();
-  const pL = total ? Math.round(L/total*100) : 0, pH = total ? 100-pL : 0;
-  $('pctL').textContent=`${pL}%　${L} 票`;
-  $('pctH').textContent=`${pH}%　${H} 票`;
-  $('fillL').style.width=(total?pL:0)+'%';
-  $('fillH').style.width=(total?pH:0)+'%';
 }
 
 function showResult(){
@@ -575,7 +607,7 @@ function showResult(){
   const {L,H,total}=tally();
   $('voteView').hidden=true; $('resView').hidden=false;
   $('subtitle').textContent = round.demo ? '示範模式・開票結果' : `${hm(round.at)} 這班・開票結果`;
-  renderCounts();
+  renderTally();
   const winner = L===H ? null : (L>H?'L':'H'), actual=round.dest;
   if(total===0){
     $('vBig').textContent=`本班車開往 ${NAME[actual]}`;
@@ -593,10 +625,8 @@ function showResult(){
   $('youVoted').textContent = myVote ? `你投了「往${NAME[myVote]}」` : '你這輪沒有投票';
   if(!round.demo && savedFor!==round.id){
     savedFor=round.id;
-    Store.saveHistory(round.id,{
-      day:ymd(serviceDay(round.at)), t:hm(round.at), L,H,
-      dest:actual, win:winner||'-',
-    }).catch(e=>console.warn('寫入歷史失敗',e));
+    Store.saveHistory(round.id,{day:ymd(serviceDay(round.at)),t:hm(round.at),L,H,dest:actual,win:winner||'-'})
+      .catch(e=>console.warn('寫入歷史失敗',e));
   }
 }
 
@@ -607,8 +637,8 @@ function renderHistory(obj){
   $('winL').textContent=wl; $('winH').textContent=wh;
   $('hlist').innerHTML = rows.length
     ? rows.map(r=>{
-        const w = r.win==='-' ? '平手' : `往${NAME[r.win]}`;
-        const mark = r.win==='-' ? '' : (r.win===r.dest ? '　✓ 命中' : '　✗ 落空');
+        const w=r.win==='-'?'平手':`往${NAME[r.win]}`;
+        const mark=r.win==='-'?'':(r.win===r.dest?'　✓ 命中':'　✗ 落空');
         return `<div class="hrow"><span class="tm">${r.t}</span>`
              + `<span class="w ${r.win==='-'?'':r.win}">${w}${mark}</span>`
              + `<span class="n">${r.L}:${r.H}</span></div>`;
@@ -627,30 +657,33 @@ function renderUpcoming(now){
 /* ── 主迴圈 ── */
 let lastUpcoming='';
 function tick(){
-  const now=new Date(), r=currentRound(now);
-  if(!r){
-    $('voteView').hidden=true; $('resView').hidden=true;
-    $('subtitle').innerHTML='今日已收班（末班 00:48）。<br>想繼續玩可以到下面「設定」打開示範模式。';
-    $('pDay').textContent='收班中';
-  }else{
-    if(!round || round.id!==r.id) switchRound(r);
-    $('pDay').textContent = r.demo ? '示範模式' : (isHoliday(serviceDay(now))?'假日班表':'平日班表');
-    if(now<round.closeAt){
-      const s=Math.max(0,Math.ceil((round.closeAt-now)/1000));
-      $('countdown').innerHTML=`投票將於 <b>${s}</b> 秒後結束`;
-      $('countdown').classList.toggle('urgent', s<=10);
-      $('voteView').hidden=false; $('resView').hidden=true;
-      $('optL').disabled=$('optH').disabled=false;
+  const now=new Date();
+  if(Store.ready){
+    const r=currentRound(now);
+    if(!r){
+      $('voteView').hidden=true; $('resView').hidden=true;
+      $('subtitle').innerHTML='今日已收班（末班 00:48）。<br>想繼續玩可以到下面「設定」打開示範模式。';
+      $('pDay').textContent='收班中';
     }else{
-      $('optL').disabled=$('optH').disabled=true;
-      showResult();
+      if(!round||round.id!==r.id) switchRound(r);
+      $('pDay').textContent = r.demo?'示範模式':(isHoliday(serviceDay(now))?'假日班表':'平日班表');
+      if(now<round.closeAt){
+        const s=Math.max(0,Math.ceil((round.closeAt-now)/1000));
+        $('countdown').innerHTML=`投票將於 <b>${s}</b> 秒後結束`;
+        $('countdown').classList.toggle('urgent',s<=10);
+        $('voteView').hidden=false; $('resView').hidden=true;
+        $('optL').disabled=$('optH').disabled=false;
+      }else{
+        $('optL').disabled=$('optH').disabled=true;
+        showResult();
+      }
     }
-  }
-  const day=ymd(serviceDay(now));
-  if(day!==historyDay){
-    historyDay=day;
-    if(unwatchH){ try{unwatchH()}catch(e){} }
-    unwatchH=Store.watchHistory(day,renderHistory);
+    const day=ymd(serviceDay(now));
+    if(day!==historyDay){
+      historyDay=day;
+      if(unwatchH){ try{unwatchH()}catch(e){} }
+      unwatchH=Store.watchHistory(day,renderHistory);
+    }
   }
   const sig=upcoming(now,3).map(d=>hm(d.at)+d.dest).join();
   if(sig!==lastUpcoming){ lastUpcoming=sig; renderUpcoming(now); }
@@ -673,7 +706,7 @@ async function pollTDX(){
   }
 }
 
-/* ── 診斷面板（網址加 #diag） ── */
+/* ── 診斷面板（#diag） ── */
 function renderDiag(){
   const probe=document.createElement('div');
   probe.style.cssText='position:fixed;top:0;left:0;width:0;height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);visibility:hidden';
@@ -681,26 +714,27 @@ function renderDiag(){
   const cs=getComputedStyle(probe), dvh=probe.offsetHeight;
   const safe=[cs.paddingTop,cs.paddingRight,cs.paddingBottom,cs.paddingLeft].join(' / ');
   probe.remove();
-  $('diagBody').textContent = [
+  $('diagBody').textContent=[
     `innerHeight        ${innerHeight}`,
     `outerHeight        ${outerHeight}`,
     `clientHeight       ${document.documentElement.clientHeight}`,
     `scrollHeight       ${document.documentElement.scrollHeight}`,
     `scrollWidth/inner  ${document.documentElement.scrollWidth} / ${innerWidth}`,
-    `visualViewport     ${visualViewport ? Math.round(visualViewport.height) : '—'}`,
+    `visualViewport     ${visualViewport?Math.round(visualViewport.height):'—'}`,
     `screen             ${screen.width}×${screen.height}`,
     `100dvh 實測        ${dvh}`,
     `safe-area TRBL     ${safe}`,
     `standalone         ${navigator.standalone ?? matchMedia('(display-mode: standalone)').matches}`,
     `devicePixelRatio   ${devicePixelRatio}`,
     `orientation        ${screen.orientation?.type ?? '—'}`,
-    `store mode         ${Store.mode}`,
+    `db ready           ${Store.ready}${Store.err?' ('+Store.err+')':''}`,
+    `round              ${round?round.id:'—'}`,
     `uid                ${UID}`,
   ].join('\n');
 }
 
 /* ── 設定面板 ── */
-$('fbUrl').value=CFG.fbUrl; $('fbKey').value=CFG.fbKey;
+$('fbUrl').value=LS.get('fbUrl'); $('fbKey').value=LS.get('fbKey');
 $('tdxId').value=CFG.tdxId; $('tdxSec').value=CFG.tdxSec; $('tdxProxy').value=CFG.proxy;
 $('demoChk').checked=CFG.demo;
 $('demoChk').addEventListener('change',e=>{ LS.set('demo',e.target.checked?'1':'0'); location.reload(); });
@@ -717,32 +751,40 @@ $('saveBtn').addEventListener('click',()=>{
 ['gesturestart','gesturechange','gestureend'].forEach(t=>
   document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
 
-/* ── 隱藏功能：#tdx 開 TDX 欄位、#diag 開診斷面板
-   （掛 hashchange，網址已經開著時直接改 hash 也會生效） ── */
+/* ── 隱藏功能：#tdx / #diag，掛 hashchange 讓已開著的頁面也生效 ── */
 let diagTimer=null;
 function applyHash(){
   const h=location.hash;
   if(h.includes('tdx')){ $('tdxBox').hidden=false; $('settings').open=true; }
   const wantDiag=h.includes('diag');
   $('diagPanel').hidden=!wantDiag;
-  if(wantDiag && !diagTimer){ renderDiag(); diagTimer=setInterval(renderDiag,2000); }
-  if(!wantDiag && diagTimer){ clearInterval(diagTimer); diagTimer=null; }
+  if(wantDiag&&!diagTimer){ renderDiag(); diagTimer=setInterval(renderDiag,2000); }
+  if(!wantDiag&&diagTimer){ clearInterval(diagTimer); diagTimer=null; }
 }
-addEventListener('hashchange', applyHash);
+addEventListener('hashchange',applyHash);
 
 /* ── 啟動 ── */
 (async()=>{
-  const mode=await Store.init();
-  if(mode==='cloud'){ $('pConn').className='pill ok'; $('connTxt').textContent='多人連線中'; }
-  else{ $('pConn').className='pill warn'; $('connTxt').textContent = CFG.fbUrl?'連線失敗・離線模式':'離線模式（僅本機）'; }
+  const ok=await Store.init();
+
+  if(ok){
+    $('pConn').className='pill ok'; $('connTxt').textContent='即時連線中';
+    $('setupView').hidden=true;
+    $('pOnline').hidden=false;
+    Store.watchOnline(n=>{ $('pOnline').textContent=`${n} 人在線`; });
+  }else{
+    $('pConn').className='pill bad';
+    $('connTxt').textContent = Store.err==='未設定' ? '尚未設定資料庫' : '連線失敗';
+    $('subtitle').textContent='這個投票需要共用資料庫才能運作';
+    $('setupView').hidden=false;
+    $('voteView').hidden=true; $('resView').hidden=true;
+    $('settings').open=true;
+  }
 
   tick(); setInterval(tick,500);
   applyHash();
-  if(CFG.tdxId && CFG.tdxSec){ pollTDX(); setInterval(pollTDX,20000); }
-
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js').catch(e=>console.warn('SW 註冊失敗',e));
-  }
+  if(CFG.tdxId&&CFG.tdxSec){ pollTDX(); setInterval(pollTDX,20000); }
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(e=>console.warn('SW 註冊失敗',e));
 })();
 </script>
 </body>
