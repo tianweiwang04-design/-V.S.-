@@ -227,7 +227,6 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
 
   <div class="statusbar">
     <span class="pill" id="pConn"><span class="dot"></span><span id="connTxt">連線中…</span></span>
-    <span class="pill" id="pOnline" hidden>—</span>
     <span class="pill" id="pDay">—</span>
     <span class="pill" id="pSrc">內建時刻表</span>
   </div>
@@ -287,9 +286,9 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
       <p class="why">這個網頁是給大家<b>一起即時投票</b>用的，所以票數必須存在一個共用的地方。沒有它的話，你只會看到自己那一票，投票也就沒有意義了。</p>
       <ol>
         <li>到 <code>console.firebase.google.com</code> 建一個專案</li>
-        <li><b>Build → Realtime Database → 建立資料庫</b>，位置選 <code>asia-southeast1</code></li>
-        <li><b>專案設定 → 一般 → 新增網頁應用程式</b>，抄下 <code>apiKey</code> 和資料庫網址</li>
-        <li>把兩個值填進 <code>index.html</code> 最上面的 <code>FIREBASE</code>，重新部署</li>
+        <li><b>Build → Realtime Database → 建立資料庫</b>，位置選 <code>asia-southeast1</code>，模式選<b>鎖定</b></li>
+        <li>到<b>規則</b>分頁貼上 README 裡那段規則並發布</li>
+        <li><b>專案設定 → 一般 → 新增網頁應用程式</b>，把 <code>apiKey</code> 和資料庫網址填進 <code>index.html</code> 最上面的 <code>FIREBASE</code>，重新部署</li>
       </ol>
       <p class="why" style="margin-bottom:0">想先試試看的話，也可以展開下面的「設定」暫時填進去 —— 但那只存在你這台裝置，正式上線還是要寫進原始碼，別人打開才會生效。</p>
     </div>
@@ -356,8 +355,8 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
    Firebase 主控台 → 專案設定 → 一般 → 你的應用程式
    ═══════════════════════════════════════════════════════════ */
 const FIREBASE = {
-  databaseURL: "https://metro-voting-default-rtdb.asia-southeast1.firebasedatabase.app",   // 例：https://your-project-default-rtdb.asia-southeast1.firebasedatabase.app
-  apiKey:      "AIzaSyB0UEnOAwEgu8iGYjqFlA0YVQmGCWts9sM",   // 例：AIzaSy...
+  databaseURL: "",   // 例：https://your-project-default-rtdb.asia-southeast1.firebasedatabase.app
+  apiKey:      "",   // 例：AIzaSy...
 };
 
 /* ═══════════ 0. 設定與工具 ═══════════ */
@@ -379,7 +378,6 @@ if(!UID){ UID='u'+Math.random().toString(36).slice(2,10)+Date.now().toString(36)
 const VOTE_CLOSE_LEAD=30;   // 發車前 30 秒截止
 const RESULT_HOLD=45;       // 發車後續顯示結果 45 秒
 const DEMO_ROUND=45;
-const PRESENCE_TTL=90000;   // 90 秒內有心跳才算在線
 
 /* ═══════════ 1. 大橋頭站北向時刻表（L=往蘆洲 H=往迴龍）
    來源：臺北捷運官方大橋頭站時刻表，2026-05-11 生效
@@ -430,21 +428,25 @@ function currentRound(now=new Date()){
 const upcoming=(now,n=3)=>departures(now).filter(d=>d.at>now).slice(0,n);
 
 /* ═══════════ 2. 共用資料庫（Firebase Realtime Database）
-   沒有離線退路：這是一個大家一起投票的網頁，只存自己一票沒有意義。
+   ── 為什麼是「計數器」而不是「同步整份名單」 ──
+   Realtime Database 的監聽是：該節點一有變動，就把「整份資料」推給
+   所有監聽者。如果大家都監聽整份票單，流量會是人數的三次方，
+   幾十個人同時投票就會把免費額度燒光。
+   所以這裡只同步兩個數字 tally={L,H}（用 transaction 累加），
+   每個人另外只讀自己那一格 votes/<uid> 來記住自己投了什麼。
    ═══════════ */
 const Store={
   ready:false, err:null, ROOT:'luzhouVote',
   async init(){
     if(!CFG.fbUrl || !CFG.fbKey){ this.err='未設定'; return false; }
     try{
-      const [{initializeApp},{getDatabase,ref,onValue,set,remove,onDisconnect,serverTimestamp}] = await Promise.all([
+      const [{initializeApp},{getDatabase,ref,onValue,set,remove,runTransaction}] = await Promise.all([
         import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
         import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'),
       ]);
       const app=initializeApp({apiKey:CFG.fbKey, databaseURL:CFG.fbUrl});
-      Object.assign(this,{db:getDatabase(app),ref,onValue,set,remove,onDisconnect,serverTimestamp});
+      Object.assign(this,{db:getDatabase(app),ref,onValue,set,remove,runTransaction});
       this.ready=true;
-      this._presence();
       return true;
     }catch(e){
       console.error('Firebase 初始化失敗',e);
@@ -452,23 +454,43 @@ const Store={
       return false;
     }
   },
-  _presence(){
-    const me=this.ref(this.db,`${this.ROOT}/presence/${UID}`);
-    const beat=()=>this.set(me,Date.now()).catch(()=>{});
-    this.onDisconnect(me).remove();
-    beat(); setInterval(beat,30000);
-    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) beat(); });
+
+  /** 把票數搬一格：prev→null 代表新投，next→null 代表取消 */
+  async move(rid, prev, next){
+    if(prev===next) return;
+    await this.runTransaction(this.ref(this.db,`${this.ROOT}/rounds/${rid}/tally`), t=>{
+      t = t || {L:0,H:0};
+      if(prev) t[prev]=Math.max(0,(t[prev]||0)-1);
+      if(next) t[next]=(t[next]||0)+1;
+      return t;
+    });
+    try{
+      const me=this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes/${UID}`);
+      if(next) await this.set(me,next); else await this.remove(me);
+    }catch(e){
+      // 記錄自己那票失敗就把計數器搬回去，避免票數浮報
+      await this.runTransaction(this.ref(this.db,`${this.ROOT}/rounds/${rid}/tally`), t=>{
+        t = t || {L:0,H:0};
+        if(next) t[next]=Math.max(0,(t[next]||0)-1);
+        if(prev) t[prev]=(t[prev]||0)+1;
+        return t;
+      });
+      throw e;
+    }
   },
-  watchOnline(cb){
-    if(!this.ready) return ()=>{};
-    return this.onValue(this.ref(this.db,`${this.ROOT}/presence`),s=>{
-      const o=s.val()||{}, now=Date.now();
-      cb(Object.values(o).filter(t=>typeof t==='number' && now-t<PRESENCE_TTL).length);
+
+  /** 只監聽兩個數字，不是整份票單 */
+  watchTally(rid,cb){
+    return this.onValue(this.ref(this.db,`${this.ROOT}/rounds/${rid}/tally`),s=>{
+      const v=s.val()||{};
+      cb({L:+v.L||0, H:+v.H||0});
     });
   },
-  vote(rid,dest){ return this.set(this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes/${UID}`),dest); },
-  unvote(rid){   return this.remove(this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes/${UID}`)); },
-  watch(rid,cb){ return this.onValue(this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes`),s=>cb(s.val()||{})); },
+  /** 只讀自己那一格 */
+  watchMine(rid,cb){
+    return this.onValue(this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes/${UID}`),s=>cb(s.val()||null));
+  },
+
   saveHistory(rid,rec){ return this.set(this.ref(this.db,`${this.ROOT}/history/${rec.day}/${rid}`),rec); },
   watchHistory(day,cb){ return this.onValue(this.ref(this.db,`${this.ROOT}/history/${day}`),s=>cb(s.val()||{})); },
 };
@@ -510,17 +532,11 @@ const TDX={
 /* ═══════════ 4. UI ═══════════ */
 const $=id=>document.getElementById(id);
 const NAME={L:'蘆洲',H:'迴龍'};
-let round=null, picked=null, myVote=null, votes={};
-let unwatch=null, unwatchH=null, historyDay=null, renderedFor=null, savedFor=null;
+let round=null, picked=null, myVote=null, tally={L:0,H:0};
+let unTally=null, unMine=null, unHist=null, historyDay=null, renderedFor=null, savedFor=null;
 
-/* ── 即時票數（投票中與開票後共用） ── */
-function tally(){
-  let L=0,H=0;
-  for(const k in votes){ if(votes[k]==='L')L++; else if(votes[k]==='H')H++; }
-  return {L,H,total:L+H};
-}
 function renderTally(){
-  const {L,H,total}=tally();
+  const {L,H}=tally, total=L+H;
   const pL = total ? L/total*100 : 50;
   const pLr= total ? Math.round(pL) : 0;
 
@@ -536,14 +552,21 @@ function renderTally(){
   $('tallyRes').classList.toggle('zero', total===0);
 }
 
+/** 依 myVote / picked 更新按鈕外觀 */
+function syncButtons(){
+  const sel = picked || myVote;
+  $('optL').setAttribute('aria-checked',String(sel==='L'));
+  $('optH').setAttribute('aria-checked',String(sel==='H'));
+  const b=$('submitBtn');
+  if(!sel){ b.className='submit'; b.disabled=true; b.textContent='請先選擇往蘆洲或往迴龍'; }
+  else if(myVote===sel){ b.className='submit done'; b.disabled=true; b.textContent=`已投「往${NAME[sel]}」✓`; }
+  else{ b.className='submit on'; b.disabled=false; b.textContent = myVote?`改投「往${NAME[sel]}」`:`確認投「往${NAME[sel]}」`; }
+  $('undoBtn').hidden = !myVote;
+}
+
 function pick(v){
   if(!round || new Date()>=round.closeAt) return;
-  picked=v;
-  $('optL').setAttribute('aria-checked',String(v==='L'));
-  $('optH').setAttribute('aria-checked',String(v==='H'));
-  const b=$('submitBtn');
-  if(myVote===v){ b.className='submit done'; b.disabled=true; b.textContent=`已投「往${NAME[v]}」✓`; }
-  else{ b.className='submit on'; b.disabled=false; b.textContent = myVote?`改投「往${NAME[v]}」`:`確認投「往${NAME[v]}」`; }
+  picked=v; syncButtons();
 }
 $('optL').addEventListener('click',()=>pick('L'));
 $('optH').addEventListener('click',()=>pick('H'));
@@ -551,60 +574,44 @@ $('optH').addEventListener('click',()=>pick('H'));
 $('submitBtn').addEventListener('click',async()=>{
   if(!picked||!round) return;
   const b=$('submitBtn'); b.disabled=true; b.textContent='送出中…';
+  const prev=myVote, next=picked;
   try{
-    await Store.vote(round.id,picked);
-    myVote=picked;
-    b.className='submit done'; b.textContent=`已投「往${NAME[picked]}」✓`;
-    $('undoBtn').hidden=false;
+    await Store.move(round.id, prev, next);
+    myVote=next; syncButtons();
   }catch(e){
     console.error(e);
     b.className='submit on'; b.disabled=false; b.textContent='送出失敗，再按一次';
   }
 });
 $('undoBtn').addEventListener('click',async()=>{
-  if(!round) return;
+  if(!round||!myVote) return;
+  const prev=myVote;
   try{
-    await Store.unvote(round.id);
-    myVote=null; picked=null;
-    $('optL').setAttribute('aria-checked','false');
-    $('optH').setAttribute('aria-checked','false');
-    const b=$('submitBtn'); b.className='submit'; b.disabled=true; b.textContent='請先選擇往蘆洲或往迴龍';
-    $('undoBtn').hidden=true;
+    await Store.move(round.id, prev, null);
+    myVote=null; picked=null; syncButtons();
   }catch(e){ console.error(e); }
 });
 
 function switchRound(r){
-  if(unwatch){ try{unwatch()}catch(e){} }
-  round=r; picked=null; myVote=null; votes={}; renderedFor=null;
-  $('optL').setAttribute('aria-checked','false');
-  $('optH').setAttribute('aria-checked','false');
+  if(unTally){ try{unTally()}catch(e){} }
+  if(unMine){ try{unMine()}catch(e){} }
+  round=r; picked=null; myVote=null; tally={L:0,H:0}; renderedFor=null;
   $('optL').disabled=$('optH').disabled=false;
-  const b=$('submitBtn'); b.className='submit'; b.disabled=true; b.textContent='請先選擇往蘆洲或往迴龍';
-  $('undoBtn').hidden=true;
+  syncButtons();
   $('voteView').hidden=false; $('resView').hidden=true;
   $('subtitle').textContent = r.demo ? '示範模式・請選擇待會的行駛方向'
                                      : `${hm(r.at)} 這班・請選擇待會的行駛方向`;
   renderTally();
-  unwatch=Store.watch(r.id,v=>{
-    votes=v||{};
-    if(votes[UID] && myVote!==votes[UID]){
-      myVote=votes[UID]; picked=myVote;
-      $('optL').setAttribute('aria-checked',String(myVote==='L'));
-      $('optH').setAttribute('aria-checked',String(myVote==='H'));
-      if(new Date()<round.closeAt){
-        const b2=$('submitBtn'); b2.className='submit done'; b2.disabled=true;
-        b2.textContent=`已投「往${NAME[myVote]}」✓`;
-        $('undoBtn').hidden=false;
-      }
-    }
-    renderTally();
+  unTally=Store.watchTally(r.id, t=>{ tally=t; renderTally(); });
+  unMine =Store.watchMine (r.id, v=>{
+    if(v!==myVote){ myVote=v; if(v) picked=v; if(new Date()<round.closeAt) syncButtons(); }
   });
 }
 
 function showResult(){
   if(renderedFor===round.id) return;
   renderedFor=round.id;
-  const {L,H,total}=tally();
+  const {L,H}=tally, total=L+H;
   $('voteView').hidden=true; $('resView').hidden=false;
   $('subtitle').textContent = round.demo ? '示範模式・開票結果' : `${hm(round.at)} 這班・開票結果`;
   renderTally();
@@ -623,7 +630,7 @@ function showResult(){
     $('vNote').innerHTML=`共 ${total} 票。很遺憾，這班車開往 <b>${NAME[actual]}</b>，台北捷運表示不予理會。<br>下一班再戰。`;
   }
   $('youVoted').textContent = myVote ? `你投了「往${NAME[myVote]}」` : '你這輪沒有投票';
-  if(!round.demo && savedFor!==round.id){
+  if(!round.demo && savedFor!==round.id && total>0){
     savedFor=round.id;
     Store.saveHistory(round.id,{day:ymd(serviceDay(round.at)),t:hm(round.at),L,H,dest:actual,win:winner||'-'})
       .catch(e=>console.warn('寫入歷史失敗',e));
@@ -681,8 +688,8 @@ function tick(){
     const day=ymd(serviceDay(now));
     if(day!==historyDay){
       historyDay=day;
-      if(unwatchH){ try{unwatchH()}catch(e){} }
-      unwatchH=Store.watchHistory(day,renderHistory);
+      if(unHist){ try{unHist()}catch(e){} }
+      unHist=Store.watchHistory(day,renderHistory);
     }
   }
   const sig=upcoming(now,3).map(d=>hm(d.at)+d.dest).join();
@@ -729,6 +736,7 @@ function renderDiag(){
     `orientation        ${screen.orientation?.type ?? '—'}`,
     `db ready           ${Store.ready}${Store.err?' ('+Store.err+')':''}`,
     `round              ${round?round.id:'—'}`,
+    `tally              L=${tally.L} H=${tally.H} me=${myVote??'—'}`,
     `uid                ${UID}`,
   ].join('\n');
 }
@@ -766,12 +774,9 @@ addEventListener('hashchange',applyHash);
 /* ── 啟動 ── */
 (async()=>{
   const ok=await Store.init();
-
   if(ok){
     $('pConn').className='pill ok'; $('connTxt').textContent='即時連線中';
     $('setupView').hidden=true;
-    $('pOnline').hidden=false;
-    Store.watchOnline(n=>{ $('pOnline').textContent=`${n} 人在線`; });
   }else{
     $('pConn').className='pill bad';
     $('connTxt').textContent = Store.err==='未設定' ? '尚未設定資料庫' : '連線失敗';
@@ -780,7 +785,6 @@ addEventListener('hashchange',applyHash);
     $('voteView').hidden=true; $('resView').hidden=true;
     $('settings').open=true;
   }
-
   tick(); setInterval(tick,500);
   applyHash();
   if(CFG.tdxId&&CFG.tdxSec){ pollTDX(); setInterval(pollTDX,20000); }
