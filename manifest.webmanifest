@@ -1,0 +1,17 @@
+{
+  "name": "列車行駛方向投票｜大橋頭",
+  "short_name": "蘆洲投票",
+  "description": "中和新蘆線大橋頭分岔，投票決定下一班車開往蘆洲還是迴龍。純娛樂。",
+  "lang": "zh-Hant",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#06080d",
+  "theme_color": "#06080d",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
