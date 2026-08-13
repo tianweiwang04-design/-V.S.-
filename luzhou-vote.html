@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>列車行駛方向投票｜中和新蘆線 大橋頭</title>
+<meta name="description" content="娛樂用途。大橋頭站分岔，投票決定下一班車要開往蘆洲還是迴龍（實際上不會影響營運）。">
+<style>
+  :root{
+    --lz:#ef9c1e;          /* 蘆洲三重線 亮橘 */
+    --lz-d:#d9871a;
+    --hl:#b8871c;          /* 中和新蘆線 深橘 */
+    --hl-d:#a3761a;
+    --card:#fbfbfa;
+    --ink:#16181c;
+    --muted:#6d7076;
+    --line:#e6e5e2;
+    --radius:26px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Helvetica Neue",Arial,sans-serif;
+    color:#fff;
+    background:#0d0f11;
+    background-image:
+      radial-gradient(1200px 700px at 20% -10%, #3a3d42 0%, rgba(58,61,66,0) 60%),
+      radial-gradient(900px 600px at 90% 110%, #2a2d31 0%, rgba(42,45,49,0) 60%),
+      linear-gradient(180deg,#15171a 0%,#0b0c0e 100%);
+    background-attachment:fixed;
+    display:flex;flex-direction:column;align-items:center;
+    padding:16px 16px 40px;
+    min-height:100%;
+  }
+  .wrap{width:100%;max-width:430px}
+
+  /* ── 狀態列 ── */
+  .statusbar{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    font-size:12px;color:#c9ccd1;margin:6px 2px 14px;
+  }
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);
+    padding:5px 10px;border-radius:999px;line-height:1;white-space:nowrap;
+  }
+  .pill.ok{background:rgba(64,200,120,.15);border-color:rgba(64,200,120,.35);color:#a9f0c6}
+  .pill.warn{background:rgba(255,180,60,.14);border-color:rgba(255,180,60,.35);color:#ffd79a}
+  .pill.bad{background:rgba(255,90,90,.14);border-color:rgba(255,90,90,.35);color:#ffb3b3}
+  .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:0 0 auto}
+  .pill button,.linkbtn{
+    all:unset;cursor:pointer;color:#9fd0ff;text-decoration:underline;font-size:12px;
+  }
+
+  /* ── 主卡片 ── */
+  .card{
+    background:var(--card);color:var(--ink);
+    border-radius:var(--radius);
+    padding:30px 22px 22px;
+    box-shadow:0 24px 60px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.06) inset;
+  }
+  h1{font-size:23px;font-weight:800;text-align:center;margin:0 0 16px;letter-spacing:.5px}
+  .sub{font-size:14px;color:#4b4e54;text-align:center;margin:0 0 22px}
+
+  /* ── 選項 ── */
+  .opt{
+    position:relative;display:flex;align-items:center;gap:14px;
+    width:100%;border:none;cursor:pointer;
+    border-radius:16px;padding:14px 18px 14px 14px;margin-bottom:14px;
+    color:#fff;text-align:left;font-family:inherit;
+    transition:transform .12s cubic-bezier(.2,.8,.3,1), box-shadow .18s, filter .18s;
+    box-shadow:0 1px 2px rgba(0,0,0,.18);
+  }
+  .opt:active{transform:scale(.985)}
+  .opt.lz{background:var(--lz)}
+  .opt.hl{background:var(--hl)}
+  .opt[aria-checked="true"]{box-shadow:0 0 0 3px rgba(22,24,28,.85), 0 6px 18px rgba(0,0,0,.25)}
+  .opt:disabled{cursor:default;filter:saturate(.55) opacity(.72)}
+  .logo{
+    flex:0 0 auto;width:70px;display:flex;flex-direction:column;align-items:center;gap:5px;
+  }
+  .glyph{
+    width:46px;height:46px;border-radius:50%;background:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:25px;line-height:1;padding-bottom:2px;
+  }
+  .opt.lz .glyph{color:var(--lz)}
+  .opt.hl .glyph{color:var(--hl)}
+  .lname{font-size:10.5px;line-height:1.25;text-align:center;font-weight:600;letter-spacing:.2px}
+  .lname small{display:block;font-size:8.5px;font-weight:500;opacity:.92}
+  .dest{flex:1 1 auto;min-width:0}
+  .dest b{display:block;font-size:25px;font-weight:800;letter-spacing:1px;line-height:1.15}
+  .dest span{display:block;font-size:14px;font-weight:600;opacity:.95;margin-top:1px}
+  .radio{
+    flex:0 0 auto;width:21px;height:21px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.95);position:relative;
+  }
+  .opt[aria-checked="true"] .radio::after{
+    content:"";position:absolute;inset:3px;border-radius:50%;background:#fff;
+  }
+
+  /* ── 倒數 / 送出 ── */
+  .count{text-align:center;font-size:13.5px;color:#4b4e54;margin:16px 0 12px}
+  .count b{color:var(--lz);font-weight:800;font-size:16px;margin:0 3px}
+  .submit{
+    width:100%;border:none;border-radius:14px;padding:15px;
+    font-family:inherit;font-size:16px;font-weight:700;letter-spacing:2px;
+    background:#e9e8e5;color:#a7a8ab;cursor:not-allowed;transition:.18s;
+  }
+  .submit.on{background:var(--ink);color:#fff;cursor:pointer}
+  .submit.on:active{transform:scale(.99)}
+  .submit.done{background:#e9f5ec;color:#2f7a48;cursor:default}
+
+  /* ── 結果 ── */
+  .res{margin-top:4px}
+  .bar{margin-bottom:16px}
+  .bar .top{display:flex;justify-content:space-between;align-items:baseline;font-size:15px;font-weight:700;margin-bottom:7px}
+  .bar .top em{font-style:normal;font-variant-numeric:tabular-nums}
+  .bar .track{height:14px;border-radius:8px;background:#ececea;overflow:hidden}
+  .bar .fill{height:100%;border-radius:8px;width:0;transition:width .7s cubic-bezier(.2,.9,.25,1)}
+  .bar.lz .fill{background:var(--lz)} .bar.lz .top{color:var(--lz-d)}
+  .bar.hl .fill{background:var(--hl)} .bar.hl .top{color:var(--hl-d)}
+  .verdict{
+    margin-top:18px;padding:16px;border-radius:14px;background:#f2f1ee;text-align:center;
+  }
+  .verdict .big{font-size:20px;font-weight:800;margin-bottom:6px}
+  .verdict .note{font-size:12.5px;color:var(--muted);line-height:1.6}
+  .youvoted{font-size:12px;color:var(--muted);text-align:center;margin-top:12px}
+
+  /* ── 即時看板 ── */
+  .board{
+    margin-top:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+    border-radius:16px;padding:12px 14px;font-size:13px;color:#dfe2e6;
+  }
+  .board h3{margin:0 0 8px;font-size:11px;letter-spacing:2px;color:#9aa0a8;font-weight:700}
+  .board .row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px solid rgba(255,255,255,.07)}
+  .board .row:first-of-type{border-top:none}
+  .board .row .d{font-weight:700}
+  .board .row .t{color:#ffd79a;font-variant-numeric:tabular-nums}
+
+  /* ── 歷史 ── */
+  .hist{margin-top:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px}
+  .hist h3{margin:0 0 4px;font-size:11px;letter-spacing:2px;color:#9aa0a8;font-weight:700}
+  .score{display:flex;gap:8px;margin:10px 0 12px}
+  .score div{flex:1;border-radius:12px;padding:10px;text-align:center;font-weight:800;font-size:19px;color:#fff}
+  .score div span{display:block;font-size:10.5px;font-weight:600;opacity:.9;letter-spacing:1px;margin-bottom:2px}
+  .score .s-lz{background:var(--lz)} .score .s-hl{background:var(--hl)}
+  .hlist{max-height:230px;overflow:auto;font-size:12.5px}
+  .hrow{display:grid;grid-template-columns:52px 1fr auto;gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,.07);color:#cfd3d8}
+  .hrow:first-child{border-top:none}
+  .hrow .tm{font-variant-numeric:tabular-nums;color:#9aa0a8}
+  .hrow .w{font-weight:700}
+  .hrow .w.L{color:#ffbe5c} .hrow .w.H{color:#d9ad63}
+  .hrow .n{color:#8b9098;font-variant-numeric:tabular-nums}
+  .empty{color:#8b9098;font-size:12.5px;padding:8px 0}
+
+  /* ── 設定 ── */
+  .sheet{
+    margin-top:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+    border-radius:16px;padding:14px;font-size:13px;color:#dfe2e6;
+  }
+  .sheet summary{cursor:pointer;font-size:11px;letter-spacing:2px;color:#9aa0a8;font-weight:700;list-style:none}
+  .sheet summary::-webkit-details-marker{display:none}
+  .sheet summary::before{content:"▸ ";}
+  .sheet[open] summary::before{content:"▾ ";}
+  .sheet .body{margin-top:12px;display:flex;flex-direction:column;gap:9px}
+  .sheet label{font-size:11.5px;color:#9aa0a8;display:block;margin-bottom:3px}
+  .sheet input[type=text],.sheet input[type=password]{
+    width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.14);
+    color:#fff;border-radius:9px;padding:9px 10px;font-size:12.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  .sheet .btn{
+    all:unset;cursor:pointer;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.16);
+    border-radius:9px;padding:9px 14px;text-align:center;font-size:12.5px;font-weight:600;
+  }
+  .sheet .btn:active{background:rgba(255,255,255,.2)}
+  .sheet .hint{font-size:11px;color:#868c94;line-height:1.65}
+  .switch{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .foot{margin-top:18px;font-size:11px;color:#767b83;line-height:1.75;text-align:center}
+  .foot a{color:#8fb6d8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="statusbar">
+    <span class="pill" id="p-conn"><span class="dot"></span><span id="conn-txt">連線中…</span></span>
+    <span class="pill" id="p-src">內建時刻表</span>
+    <span class="pill" id="p-day">—</span>
+  </div>
+
+  <div class="card">
+    <h1>列車行駛方向投票</h1>
+    <p class="sub" id="subtitle">請選擇待會的行駛方向</p>
+
+    <div id="voteView">
+      <button class="opt lz" id="optL" role="radio" aria-checked="false">
+        <span class="logo">
+          <span class="glyph">O</span>
+          <span class="lname">蘆洲三重線<small>Luzhou Line</small></span>
+        </span>
+        <span class="dest"><b>往蘆洲</b><span>To Luzhou</span></span>
+        <span class="radio"></span>
+      </button>
+
+      <button class="opt hl" id="optH" role="radio" aria-checked="false">
+        <span class="logo">
+          <span class="glyph">O</span>
+          <span class="lname">中和新蘆線<small>Zhonghe-Xinlu Line</small></span>
+        </span>
+        <span class="dest"><b>往迴龍</b><span>To Huilong</span></span>
+        <span class="radio"></span>
+      </button>
+
+      <p class="count" id="countdown">投票將於 <b>--</b> 秒後結束</p>
+      <button class="submit" id="submitBtn" disabled>確認投票</button>
+    </div>
+
+    <div id="resView" class="res" hidden>
+      <div class="bar lz">
+        <div class="top"><span>往蘆洲 To Luzhou</span><em id="pctL">0%</em></div>
+        <div class="track"><div class="fill" id="fillL"></div></div>
+      </div>
+      <div class="bar hl">
+        <div class="top"><span>往迴龍 To Huilong</span><em id="pctH">0%</em></div>
+        <div class="track"><div class="fill" id="fillH"></div></div>
+      </div>
+      <div class="verdict">
+        <div class="big" id="vBig">開票中…</div>
+        <div class="note" id="vNote"></div>
+      </div>
+      <p class="youvoted" id="youVoted"></p>
+    </div>
+  </div>
+
+  <div class="board" id="board" hidden>
+    <h3>大橋頭站 即時看板（TDX）</h3>
+    <div id="boardBody"></div>
+  </div>
+
+  <div class="hist">
+    <h3>今日開票紀錄</h3>
+    <div class="score">
+      <div class="s-lz"><span>蘆洲 勝場</span><em id="winL">0</em></div>
+      <div class="s-hl"><span>迴龍 勝場</span><em id="winH">0</em></div>
+    </div>
+    <div class="hlist" id="hlist"><div class="empty">今天還沒有開票紀錄</div></div>
+  </div>
+
+  <details class="sheet" id="settings">
+    <summary>設定</summary>
+    <div class="body">
+
+      <div class="switch">
+        <span>示範模式（每 45 秒一輪，隨時可玩）</span>
+        <input type="checkbox" id="demoChk">
+      </div>
+      <p class="hint">末班車過後或想測試時打開。示範模式的票不會寫進正式紀錄。</p>
+
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,.1);margin:4px 0">
+
+      <div>
+        <label>Firebase Realtime Database URL（多人共享計票）</label>
+        <input type="text" id="fbUrl" placeholder="https://xxxx-default-rtdb.asia-southeast1.firebasedatabase.app" spellcheck="false">
+      </div>
+      <div>
+        <label>Firebase API Key</label>
+        <input type="text" id="fbKey" placeholder="AIza..." spellcheck="false">
+      </div>
+      <p class="hint">兩欄都填才會啟用多人模式，重新整理後生效。沒填的話會用「離線模式」，票只存在你自己的瀏覽器。設定會存在 localStorage。</p>
+
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,.1);margin:4px 0">
+
+      <div>
+        <label>TDX Client ID（可選，抓即時到站）</label>
+        <input type="text" id="tdxId" placeholder="xxxxx-yyyyyyyy" spellcheck="false">
+      </div>
+      <div>
+        <label>TDX Client Secret</label>
+        <input type="password" id="tdxSec" placeholder="••••••••" spellcheck="false">
+      </div>
+      <div>
+        <label>Proxy 前綴（可選，繞過 CORS）</label>
+        <input type="text" id="tdxProxy" placeholder="https://your-proxy.example/" spellcheck="false">
+      </div>
+      <p class="hint">
+        ⚠️ TDX 的 secret 放在前端等於公開，只建議用自己的測試金鑰。<br>
+        瀏覽器直接打 TDX 多半會被 CORS 擋，需要自己架一個 proxy（把上面填成 proxy 網址，程式會用
+        <code>proxy + 原始網址</code> 去打）。抓不到就自動退回內建時刻表。
+      </p>
+
+      <button class="btn" id="saveBtn">儲存設定並重新載入</button>
+    </div>
+  </details>
+
+  <p class="foot">
+    純娛樂，不會影響台北捷運實際營運。<br>
+    時刻表為大橋頭站北向（往蘆洲／迴龍）2026-05-11 生效版本。
+  </p>
+</div>
+
+<script type="module">
+/* ══════════════════════════════════════════════════════════
+   0. 設定
+   ══════════════════════════════════════════════════════════ */
+const LS = {
+  get:(k,d='')=>{try{return localStorage.getItem('lzv_'+k) ?? d}catch(e){return d}},
+  set:(k,v)=>{try{localStorage.setItem('lzv_'+k,v)}catch(e){}},
+};
+
+const CFG = {
+  fbUrl : LS.get('fbUrl'),
+  fbKey : LS.get('fbKey'),
+  tdxId : LS.get('tdxId'),
+  tdxSec: LS.get('tdxSec'),
+  proxy : LS.get('proxy'),
+  demo  : LS.get('demo') === '1',
+};
+
+// 匿名使用者 ID
+let UID = LS.get('uid');
+if(!UID){ UID = 'u' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); LS.set('uid',UID); }
+
+const VOTE_CLOSE_LEAD = 30;   // 發車前 30 秒截止投票
+const RESULT_HOLD     = 45;   // 發車後再顯示 45 秒結果
+const DEMO_ROUND      = 45;   // 示範模式一輪長度（秒）
+
+/* ══════════════════════════════════════════════════════════
+   1. 大橋頭站北向時刻表（L=往蘆洲, H=往迴龍）
+   資料來源：臺北捷運官方大橋頭站時刻表，2026-05-11 生效
+   ══════════════════════════════════════════════════════════ */
+const TT = {
+  weekday:"0602L,0606H,0609L,0615H,0620L,0624H,0628L,0633H,0638L,0642H,0648L,0653H,0658L,0703H,0707L,0711H,0715L,0719H,0723L,0727H,0730L,0737H,0739L,0742H,0745L,0748H,0751L,0754H,0758L,0800H,0804L,0806H,0809L,0812H,0816L,0818H,0822L,0825H,0828L,0831H,0834L,0837H,0840L,0843H,0846L,0848H,0851L,0854H,0857L,0859H,0902L,0904H,0907L,0909H,0912L,0914H,0917L,0919H,0922L,0924H,0927L,0930H,0932L,0935H,0939L,0941H,0944L,0947H,0951L,0954H,0959L,1003H,1008L,1012H,1016L,1020H,1025L,1029H,1034L,1038H,1042L,1047H,1051L,1056H,1100L,1104H,1109L,1113H,1116L,1121H,1126L,1131H,1136L,1141H,1145L,1150H,1155L,1200H,1205L,1210H,1214L,1219H,1224L,1229H,1234L,1239H,1243L,1248H,1253L,1258H,1303L,1308H,1312L,1317H,1322L,1327H,1332L,1337H,1341L,1346H,1351L,1356H,1401L,1406H,1410L,1415H,1420L,1425H,1430L,1435H,1439L,1444H,1449L,1454H,1459L,1504H,1508L,1513H,1518L,1523H,1528L,1533H,1537L,1542H,1547L,1552H,1557L,1602H,1606L,1611H,1616L,1621H,1626L,1631H,1635L,1640H,1645L,1650H,1655L,1658H,1702L,1705H,1708L,1711H,1714L,1717H,1721L,1724H,1727L,1730H,1733L,1736H,1740L,1743H,1746L,1749H,1752L,1755H,1759L,1802H,1805L,1808H,1811L,1814H,1818L,1821H,1824L,1827H,1830L,1833H,1837L,1840H,1843L,1846H,1849L,1852H,1856L,1859H,1902L,1905H,1908L,1911H,1914L,1918H,1920L,1924H,1927L,1930H,1933L,1936H,1940L,1943H,1946L,1949H,1952L,1956H,1959L,2003H,2007L,2012H,2016L,2020H,2025L,2029H,2033L,2038H,2042L,2046H,2051L,2055H,2059L,2104H,2108L,2112H,2117L,2121H,2125L,2130H,2134L,2138H,2143L,2147H,2152L,2156H,2201L,2204H,2209L,2213H,2217L,2222H,2227L,2230H,2235L,2239H,2243L,2248H,2251L,2255H,2300L,2305H,2310L,2315H,2320L,2324H,2330L,2336H,2342L,2348H,2354L,0000H,0006L,0012H,0018L,0024H,0027L,0032H,0045L,0048H",
+  holiday:"0602L,0606H,0609L,0615H,0620L,0624H,0628L,0632H,0637L,0642H,0647L,0652H,0656L,0701H,0706L,0711H,0715L,0720H,0725L,0730H,0734L,0739H,0744L,0749H,0754L,0758H,0803L,0808H,0813L,0817H,0822L,0827H,0832L,0837H,0841L,0846H,0851L,0856H,0901L,0905H,0910L,0915H,0920L,0924H,0929L,0934H,0939L,0944H,0948L,0953H,0958L,1003H,1007L,1012H,1017L,1022H,1026L,1031H,1036L,1041H,1046L,1050H,1055L,1100H,1105L,1109H,1114L,1119H,1124L,1129H,1133L,1138H,1143L,1148H,1153L,1157H,1202L,1207H,1212L,1216H,1221L,1226H,1231L,1236H,1240L,1245H,1250L,1255H,1259L,1304H,1309L,1314H,1319L,1323H,1328L,1333H,1338L,1343H,1347L,1352H,1357L,1402H,1406L,1411H,1416L,1421H,1426L,1430H,1435L,1440H,1445L,1449H,1454L,1459H,1504L,1509H,1513L,1518H,1523L,1528H,1533L,1537H,1542L,1547H,1552L,1556H,1601L,1606H,1611L,1616H,1620L,1625H,1630L,1635H,1640L,1644H,1649L,1654H,1659L,1703H,1708L,1713H,1718L,1723H,1727L,1732H,1737L,1742H,1746L,1751H,1756L,1801H,1806L,1810H,1815L,1820H,1825L,1830H,1834L,1839H,1844L,1849H,1853L,1858H,1903L,1908H,1913L,1917H,1922L,1927H,1932L,1936H,1941L,1946H,1951L,1956H,2000L,2005H,2010L,2015H,2020L,2024H,2029L,2034H,2039L,2043H,2048L,2053H,2058L,2103H,2107L,2112H,2117L,2122H,2127L,2132H,2137L,2141H,2146L,2151H,2156L,2200H,2205L,2210H,2215L,2220H,2224L,2229H,2234L,2239H,2243L,2248H,2253L,2258H,2303L,2307H,2312L,2317H,2322L,2324H,2330L,2336H,2342L,2348H,2354L,0000H,0006L,0012H,0018L,0024H,0027L,0032H,0045L,0048H",
+};
+const parseTT = s => s.split(',').map(x=>({
+  h:+x.slice(0,2), m:+x.slice(2,4), dest:x[4]
+}));
+const TTP = { weekday:parseTT(TT.weekday), holiday:parseTT(TT.holiday) };
+
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+const hm  = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+/** 營運日：凌晨 04:00 前算前一天 */
+function serviceDay(now){
+  const d = new Date(now);
+  if(d.getHours() < 4) d.setDate(d.getDate()-1);
+  d.setHours(0,0,0,0);
+  return d;
+}
+function isHoliday(sd){ const w = sd.getDay(); return w===0 || w===6; }
+
+/** 回傳該營運日所有班次 [{at:Date, dest}] */
+function departures(now){
+  const sd = serviceDay(now);
+  const key = isHoliday(sd) ? 'holiday' : 'weekday';
+  return TTP[key].map(t=>{
+    const at = new Date(sd);
+    at.setDate(at.getDate() + (t.h < 4 ? 1 : 0));
+    at.setHours(t.h, t.m, 0, 0);
+    return { at, dest:t.dest };
+  });
+}
+
+/** 目前這一輪 */
+function currentRound(now = new Date()){
+  if(CFG.demo){
+    const n = Math.floor(now.getTime()/1000/DEMO_ROUND);
+    const at = new Date((n+1)*DEMO_ROUND*1000);
+    return {
+      id:'demo-'+n, at,
+      dest: n%2 ? 'H':'L',
+      closeAt: new Date(at.getTime()-10000),   // 示範模式提前 10 秒截止
+      endAt:   new Date(at.getTime()+12000),
+      demo:true,
+    };
+  }
+  const list = departures(now);
+  for(const d of list){
+    const endAt = new Date(d.at.getTime() + RESULT_HOLD*1000);
+    if(now < endAt){
+      return {
+        id: ymd(d.at)+'-'+pad(d.at.getHours())+pad(d.at.getMinutes()),
+        at: d.at, dest:d.dest,
+        closeAt: new Date(d.at.getTime() - VOTE_CLOSE_LEAD*1000),
+        endAt, demo:false,
+      };
+    }
+  }
+  return null;  // 今日已收班
+}
+
+/* ══════════════════════════════════════════════════════════
+   2. 儲存後端：Firebase Realtime DB，沒設定就退回 localStorage
+   ══════════════════════════════════════════════════════════ */
+const Store = {
+  mode:'local', db:null, ref:null, onValue:null, set:null, get:null, ROOT:'luzhouVote',
+  _localKey:k=>'lzv_local_'+k,
+
+  async init(){
+    if(!CFG.fbUrl || !CFG.fbKey) return this.mode='local';
+    try{
+      const [{initializeApp},{getDatabase,ref,onValue,set,get,child}] = await Promise.all([
+        import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'),
+      ]);
+      const app = initializeApp({ apiKey:CFG.fbKey, databaseURL:CFG.fbUrl });
+      this.db = getDatabase(app);
+      Object.assign(this,{ref,onValue,set,get,child});
+      this.mode = 'cloud';
+    }catch(e){
+      console.warn('Firebase 初始化失敗，改用離線模式', e);
+      this.mode = 'local';
+    }
+    return this.mode;
+  },
+
+  /** 投票；同一 uid 重複投會覆蓋 */
+  async vote(roundId, dest){
+    if(this.mode==='cloud'){
+      await this.set(this.ref(this.db, `${this.ROOT}/rounds/${roundId}/votes/${UID}`), dest);
+    }else{
+      const k = this._localKey('r_'+roundId);
+      const o = JSON.parse(localStorage.getItem(k) || '{}');
+      o[UID] = dest;
+      localStorage.setItem(k, JSON.stringify(o));
+      this._emit(roundId, o);
+    }
+  },
+
+  /** 訂閱某一輪的票；cb(votesObject) */
+  watch(roundId, cb){
+    if(this.mode==='cloud'){
+      return this.onValue(this.ref(this.db, `${this.ROOT}/rounds/${roundId}/votes`), s=>cb(s.val()||{}));
+    }
+    this._subs = this._subs || {};
+    this._subs[roundId] = cb;
+    cb(JSON.parse(localStorage.getItem(this._localKey('r_'+roundId)) || '{}'));
+    return ()=>{ delete this._subs[roundId]; };
+  },
+  _emit(roundId, o){ this._subs?.[roundId]?.(o); },
+
+  /** 寫入開票結果（冪等） */
+  async saveHistory(roundId, rec){
+    if(this.mode==='cloud'){
+      await this.set(this.ref(this.db, `${this.ROOT}/history/${rec.day}/${roundId}`), rec);
+    }else{
+      const k = this._localKey('h_'+rec.day);
+      const o = JSON.parse(localStorage.getItem(k) || '{}');
+      o[roundId] = rec;
+      localStorage.setItem(k, JSON.stringify(o));
+      this._hcb?.(o);
+    }
+  },
+
+  watchHistory(day, cb){
+    if(this.mode==='cloud'){
+      return this.onValue(this.ref(this.db, `${this.ROOT}/history/${day}`), s=>cb(s.val()||{}));
+    }
+    this._hcb = cb;
+    cb(JSON.parse(localStorage.getItem(this._localKey('h_'+day)) || '{}'));
+    return ()=>{ this._hcb=null; };
+  },
+};
+
+/* ══════════════════════════════════════════════════════════
+   3. TDX 即時到站（可選）
+   ══════════════════════════════════════════════════════════ */
+const TDX = {
+  token:null, exp:0, ok:false, err:null,
+  url(u){ return CFG.proxy ? CFG.proxy + u : u; },
+
+  async auth(){
+    if(this.token && Date.now() < this.exp - 60000) return this.token;
+    const r = await fetch(this.url('https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token'),{
+      method:'POST',
+      headers:{'content-type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({grant_type:'client_credentials',client_id:CFG.tdxId,client_secret:CFG.tdxSec}),
+    });
+    if(!r.ok) throw new Error('取得 TDX token 失敗 ('+r.status+')');
+    const j = await r.json();
+    this.token = j.access_token;
+    this.exp   = Date.now() + (j.expires_in||86400)*1000;
+    return this.token;
+  },
+
+  /** 大橋頭 O12 即時到站；回傳 [{dest, text}] */
+  async liveboard(){
+    const t = await this.auth();
+    const api = "https://tdx.transportdata.tw/api/basic/v2/Rail/Metro/LiveBoard/TRTC?%24filter=StationID%20eq%20'O12'&%24format=JSON";
+    const r = await fetch(this.url(api), { headers:{ authorization:'Bearer '+t } });
+    if(!r.ok) throw new Error('LiveBoard 回應 '+r.status);
+    const j = await r.json();
+    const arr = Array.isArray(j) ? j : (j.MetroLiveBoards || j.LiveBoards || []);
+    return arr.map(x=>{
+      const head = x.TripHeadSign || x.DestinationStationName?.Zh_tw ||
+                   x.DestinationStationID || x.TrainNumber || '';
+      const est  = x.EstimateTime ?? x.EstimatedTime ?? null;
+      const st   = x.ServiceStatus;
+      let text;
+      if(est != null)            text = est <= 0 ? '進站中' : `約 ${est} 分`;
+      else if(st === 1)          text = '進站中';
+      else if(st === 2)          text = '離站';
+      else                       text = x.UpdateTime ? String(x.UpdateTime).slice(11,16) : '—';
+      return { dest:String(head), text };
+    }).filter(x=>x.dest);
+  },
+};
+
+/* ══════════════════════════════════════════════════════════
+   4. UI
+   ══════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const el = {
+  optL:$('optL'), optH:$('optH'), submit:$('submitBtn'), countdown:$('countdown'),
+  voteView:$('voteView'), resView:$('resView'), subtitle:$('subtitle'),
+  pctL:$('pctL'), pctH:$('pctH'), fillL:$('fillL'), fillH:$('fillH'),
+  vBig:$('vBig'), vNote:$('vNote'), youVoted:$('youVoted'),
+  connTxt:$('conn-txt'), pConn:$('p-conn'), pSrc:$('p-src'), pDay:$('p-day'),
+  hlist:$('hlist'), winL:$('winL'), winH:$('winH'),
+  board:$('board'), boardBody:$('boardBody'),
+};
+
+const NAME = { L:'蘆洲', H:'迴龍' };
+let round=null, picked=null, myVote=null, votes={}, unwatch=null, historyDay=null, unwatchH=null;
+
+/* ── 選項互動 ── */
+function pick(v){
+  if(!round || new Date() >= round.closeAt) return;
+  picked = v;
+  el.optL.setAttribute('aria-checked', v==='L');
+  el.optH.setAttribute('aria-checked', v==='H');
+  el.submit.classList.add('on');
+  el.submit.disabled = false;
+  el.submit.textContent = myVote ? '更改投票' : '確認投票';
+}
+el.optL.onclick = ()=>pick('L');
+el.optH.onclick = ()=>pick('H');
+
+el.submit.onclick = async ()=>{
+  if(!picked || !round) return;
+  el.submit.disabled = true;
+  el.submit.textContent = '送出中…';
+  try{
+    await Store.vote(round.id, picked);
+    myVote = picked;
+    el.submit.className = 'submit done';
+    el.submit.textContent = '已投票 ✓　可再點選更改';
+    setTimeout(()=>{
+      if(round && new Date() < round.closeAt){
+        el.submit.className='submit on'; el.submit.disabled=false; el.submit.textContent='更改投票';
+      }
+    }, 1600);
+  }catch(e){
+    el.submit.className='submit on'; el.submit.disabled=false;
+    el.submit.textContent = '送出失敗，再試一次';
+    console.error(e);
+  }
+};
+
+/* ── 換一輪 ── */
+function switchRound(r){
+  if(unwatch){ try{unwatch()}catch(e){} unwatch=null; }
+  round = r; picked=null; myVote=null; votes={};
+  el.optL.setAttribute('aria-checked','false');
+  el.optH.setAttribute('aria-checked','false');
+  el.optL.disabled = el.optH.disabled = false;
+  el.submit.className='submit'; el.submit.disabled=true; el.submit.textContent='確認投票';
+  el.voteView.hidden=false; el.resView.hidden=true;
+  el.subtitle.textContent = r.demo
+    ? '示範模式・請選擇待會的行駛方向'
+    : `${hm(r.at)} 這班・請選擇待會的行駛方向`;
+  unwatch = Store.watch(r.id, v=>{ votes=v||{}; if(myVote==null && votes[UID]) { myVote=votes[UID]; } renderCounts(); });
+}
+
+function tally(){
+  let L=0,H=0;
+  for(const k in votes){ if(votes[k]==='L') L++; else if(votes[k]==='H') H++; }
+  return {L,H,total:L+H};
+}
+function renderCounts(){
+  const {L,H,total} = tally();
+  const pL = total ? Math.round(L/total*100) : 0;
+  const pH = total ? 100-pL : 0;
+  el.pctL.textContent = `${pL}%　${L} 票`;
+  el.pctH.textContent = `${pH}%　${H} 票`;
+  el.fillL.style.width = (total? pL:0)+'%';
+  el.fillH.style.width = (total? pH:0)+'%';
+}
+
+/* ── 開票 ── */
+let closedFor = null, renderedFor = null;
+function showResult(){
+  if(renderedFor === round.id) return;   // 一輪只畫一次，避免每 0.5 秒重繪
+  renderedFor = round.id;
+  const {L,H,total} = tally();
+  el.voteView.hidden=true; el.resView.hidden=false;
+  el.subtitle.textContent = round.demo ? '示範模式・開票結果' : `${hm(round.at)} 這班・開票結果`;
+  renderCounts();
+
+  const winner = L===H ? null : (L>H ? 'L' : 'H');
+  const actual = round.dest;
+
+  if(total === 0){
+    el.vBig.textContent = `本班車開往 ${NAME[actual]}`;
+    el.vNote.textContent = '這一輪沒有人投票，北捷照常發車。';
+  }else if(winner === null){
+    el.vBig.textContent = `平手！本班車開往 ${NAME[actual]}`;
+    el.vNote.textContent = `${total} 票對半分，最後還是時刻表說了算。`;
+  }else if(winner === actual){
+    el.vBig.textContent = `民意勝利！本班車開往 ${NAME[actual]}`;
+    el.vNote.textContent = `共 ${total} 票，多數人想去的方向剛好就是這班車的終點站。`;
+  }else{
+    el.vBig.textContent = `民意：${NAME[winner]}　實際：${NAME[actual]}`;
+    el.vNote.innerHTML = `共 ${total} 票。很遺憾，這班車開往<b>${NAME[actual]}</b>，台北捷運表示不予理會。<br>下一班再戰。`;
+  }
+  el.youVoted.textContent = myVote ? `你投了「往${NAME[myVote]}」` : '你這輪沒有投票';
+
+  // 寫入歷史（示範模式不寫）
+  if(!round.demo && closedFor !== round.id){
+    closedFor = round.id;
+    Store.saveHistory(round.id, {
+      day: ymd(serviceDay(round.at)),
+      t: hm(round.at), L, H, dest: actual,
+      win: winner || '-',
+    }).catch(e=>console.warn('寫入歷史失敗', e));
+  }
+}
+
+/* ── 歷史 ── */
+function renderHistory(obj){
+  const rows = Object.values(obj||{}).sort((a,b)=> (b.t||'').localeCompare(a.t||''));
+  let wl=0, wh=0;
+  rows.forEach(r=>{ if(r.win==='L') wl++; else if(r.win==='H') wh++; });
+  el.winL.textContent = wl; el.winH.textContent = wh;
+  if(!rows.length){ el.hlist.innerHTML = '<div class="empty">今天還沒有開票紀錄</div>'; return; }
+  el.hlist.innerHTML = rows.map(r=>{
+    const w = r.win==='-' ? '平手' : `往${NAME[r.win]}`;
+    const cls = r.win==='-' ? '' : r.win;
+    const match = r.win===r.dest ? '　✓ 命中' : (r.win==='-' ? '' : '　✗ 落空');
+    return `<div class="hrow"><span class="tm">${r.t}</span>`
+         + `<span class="w ${cls}">${w}${match}</span>`
+         + `<span class="n">${r.L}:${r.H}</span></div>`;
+  }).join('');
+}
+
+/* ── 主迴圈 ── */
+function tick(){
+  const now = new Date();
+  const r = currentRound(now);
+
+  if(!r){
+    el.voteView.hidden=true; el.resView.hidden=true;
+    el.subtitle.innerHTML = '今日已收班（末班 00:48）。<br>想繼續玩可以到下面「設定」打開示範模式。';
+    el.pDay.textContent = '收班中';
+    return;
+  }
+  if(!round || round.id !== r.id) switchRound(r);
+  else round.at = r.at;
+
+  el.pDay.textContent = (r.demo ? '示範模式' : (isHoliday(serviceDay(now)) ? '假日班表' : '平日班表'));
+
+  if(now < round.closeAt){
+    const s = Math.max(0, Math.ceil((round.closeAt - now)/1000));
+    el.countdown.innerHTML = `投票將於 <b>${s}</b> 秒後結束`;
+    el.voteView.hidden=false; el.resView.hidden=true;
+    el.optL.disabled = el.optH.disabled = false;
+  }else{
+    el.optL.disabled = el.optH.disabled = true;
+    showResult();
+  }
+
+  // 歷史換日
+  const day = ymd(serviceDay(now));
+  if(day !== historyDay){
+    historyDay = day;
+    if(unwatchH){ try{unwatchH()}catch(e){} }
+    unwatchH = Store.watchHistory(day, renderHistory);
+  }
+}
+
+/* ── TDX 輪詢 ── */
+async function pollTDX(){
+  if(!CFG.tdxId || !CFG.tdxSec) return;
+  try{
+    const rows = await TDX.liveboard();
+    TDX.ok = true;
+    el.pSrc.textContent = 'TDX 即時看板';
+    el.pSrc.className = 'pill ok';
+    el.board.hidden = false;
+    el.boardBody.innerHTML = rows.length
+      ? rows.map(r=>`<div class="row"><span class="d">${r.dest}</span><span class="t">${r.text}</span></div>`).join('')
+      : '<div class="row"><span class="d">目前沒有回傳班次</span></div>';
+  }catch(e){
+    TDX.ok = false; TDX.err = e.message;
+    el.pSrc.textContent = 'TDX 失敗・用內建時刻表';
+    el.pSrc.className = 'pill warn';
+    el.board.hidden = false;
+    el.boardBody.innerHTML = `<div class="row"><span class="d">${e.message}</span></div>`
+      + `<div class="row"><span class="d" style="color:#9aa0a8;font-weight:400">多半是 CORS，設定裡填 proxy 前綴可解。投票仍依內建時刻表正常運作。</span></div>`;
+  }
+}
+
+/* ── 設定面板 ── */
+$('fbUrl').value=CFG.fbUrl; $('fbKey').value=CFG.fbKey;
+$('tdxId').value=CFG.tdxId; $('tdxSec').value=CFG.tdxSec; $('tdxProxy').value=CFG.proxy;
+$('demoChk').checked = CFG.demo;
+$('demoChk').onchange = e=>{ LS.set('demo', e.target.checked?'1':'0'); location.reload(); };
+$('saveBtn').onclick = ()=>{
+  LS.set('fbUrl', $('fbUrl').value.trim().replace(/\/+$/,''));
+  LS.set('fbKey', $('fbKey').value.trim());
+  LS.set('tdxId', $('tdxId').value.trim());
+  LS.set('tdxSec',$('tdxSec').value.trim());
+  LS.set('proxy', $('tdxProxy').value.trim());
+  location.reload();
+};
+
+/* ── 啟動 ── */
+(async ()=>{
+  const mode = await Store.init();
+  if(mode === 'cloud'){
+    el.pConn.className='pill ok'; el.connTxt.textContent='多人連線中';
+  }else{
+    el.pConn.className='pill warn';
+    el.connTxt.innerHTML = CFG.fbUrl ? '連線失敗・離線模式' : '離線模式（僅本機）';
+  }
+  tick();
+  setInterval(tick, 500);
+  if(CFG.tdxId && CFG.tdxSec){ pollTDX(); setInterval(pollTDX, 20000); }
+})();
+</script>
+</body>
+</html>
