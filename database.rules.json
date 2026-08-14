@@ -1,0 +1,50 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "luzhouVote": {
+      "rounds": {
+        "$round": {
+
+          "tally": {
+            ".read": true,
+            ".write": "$round.matches(/^[0-9]{8}-[0-9]{4}$/) || $round.matches(/^demo-[0-9]{1,12}$/)",
+            "L":      { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000" },
+            "H":      { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000" },
+            "$other": { ".validate": false }
+          },
+
+          "votes": {
+            "$uid": {
+              ".read":     true,
+              ".write":    "$uid.length <= 32 && ($round.matches(/^[0-9]{8}-[0-9]{4}$/) || $round.matches(/^demo-[0-9]{1,12}$/))",
+              ".validate": "newData.isString() && (newData.val() === 'L' || newData.val() === 'H')"
+            }
+          },
+
+          "$other": { ".validate": false }
+        }
+      },
+
+      "history": {
+        "$day": {
+          ".read": true,
+          "$round": {
+            ".write":    "!data.exists() && $day.matches(/^[0-9]{8}$/) && $round.matches(/^[0-9]{8}-[0-9]{4}$/)",
+            ".validate": "newData.hasChildren(['day','t','L','H','dest','win']) && newData.child('day').val() === $day",
+            "day":    { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{8}$/)" },
+            "t":      { ".validate": "newData.isString() && newData.val().matches(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)" },
+            "L":      { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000" },
+            "H":      { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000" },
+            "dest":   { ".validate": "newData.isString() && (newData.val() === 'L' || newData.val() === 'H')" },
+            "win":    { ".validate": "newData.isString() && (newData.val() === 'L' || newData.val() === 'H' || newData.val() === '-')" },
+            "$other": { ".validate": false }
+          }
+        }
+      },
+
+      "$other": { ".validate": false }
+    }
+  }
+}

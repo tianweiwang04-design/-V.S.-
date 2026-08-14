@@ -1,5 +1,5 @@
 /* 改動 index.html 後把 VERSION 加一號，否則使用者會拿到舊快取 */
-const VERSION = 'v3';
+const VERSION = 'v5';
 const CACHE   = 'luzhou-vote-' + VERSION;
 const ASSETS  = [
   './',

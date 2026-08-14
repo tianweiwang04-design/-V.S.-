@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>列車行駛方向投票｜中和新蘆線 大橋頭</title>
 <meta name="description" content="娛樂用途。大橋頭站分岔，大家一起即時投票決定下一班車開往蘆洲還是迴龍（實際上不會影響營運）。">
+<!-- 縱深防禦：就算有人想辦法塞進 HTML，也載不了外部腳本、連不到別的主機 -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebaseio.com wss://*.firebasedatabase.app https://*.googleapis.com https://tdx.transportdata.tw; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#06080d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -127,6 +130,10 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
 .submit.done{background:#e7f4ea;color:#2c7745;cursor:default}
 .undo{display:block;margin:9px auto 0;background:none;border:none;font-family:inherit;
   font-size:12.5px;color:var(--muted);text-decoration:underline;cursor:pointer;padding:6px 10px}
+/* 錯誤直接顯示在畫面上，手機沒有主控台可看 */
+.errline{margin:11px 0 0;padding:10px 12px;border-radius:11px;background:#fdecea;
+  color:#a1221b;font-size:11.5px;line-height:1.7;text-align:left;word-break:break-word}
+.errline b{display:block;font-size:12.5px;margin-bottom:3px}
 
 /* ── 開票結果 ── */
 .verdict{margin-top:16px;padding:16px 14px;border-radius:14px;background:#f1efeb;text-align:center}
@@ -150,13 +157,28 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
 .panel summary::-webkit-details-marker{display:none}
 .panel summary::before{content:"▸ "}
 .panel[open] summary::before{content:"▾ "}
+
+/* ── 站別查詢 ── */
+.sel{width:100%;margin-top:10px;background:rgba(0,0,0,.32);color:#fff;
+  border:1px solid rgba(255,255,255,.16);border-radius:11px;padding:11px 12px;
+  font-family:inherit;font-size:16px;font-weight:700;appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,#969ca4 50%),linear-gradient(135deg,#969ca4 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat}
 .upcoming{display:flex;gap:8px;margin-top:10px}
-.up{flex:1;border-radius:12px;padding:10px 8px;text-align:center;
+.up{flex:1;border-radius:12px;padding:10px 6px;text-align:center;position:relative;
   background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09)}
+.up.now{border-color:var(--lz);background:rgba(239,156,30,.14)}
 .up .t{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
-.up .d{font-size:11px;font-weight:700;margin-top:3px}
+.up .d{font-size:11.5px;font-weight:700;margin-top:3px}
 .up.L .d{color:var(--lz-hi)} .up.H .d{color:var(--hl-hi)}
 .up .k{font-size:9.5px;color:#868c94;letter-spacing:1px;margin-bottom:4px}
+.up .m{font-size:10px;color:#868c94;margin-top:3px}
+.up .badge{display:block;margin-top:5px;font-size:9.5px;font-weight:800;letter-spacing:.5px;
+  color:#06080d;background:var(--lz);border-radius:6px;padding:2px 0}
+.upnote{margin:10px 0 0;font-size:11px;color:#868c94;line-height:1.7}
+
+/* ── 歷史 ── */
 .score{display:flex;gap:8px;margin:10px 0 11px}
 .score div{flex:1;border-radius:12px;padding:9px;text-align:center;font-weight:800;font-size:19px;color:#fff}
 .score div span{display:block;font-size:10px;font-weight:600;opacity:.92;letter-spacing:1px;margin-bottom:2px}
@@ -171,6 +193,8 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
 .hrow .w.L{color:var(--lz-hi)} .hrow .w.H{color:var(--hl-hi)}
 .hrow .n{color:#868c94;font-variant-numeric:tabular-nums}
 .empty{color:#868c94;font-size:12.5px;padding:8px 0}
+
+/* ── 設定 ── */
 .panel .body{margin-top:12px;display:flex;flex-direction:column;gap:9px}
 .panel label{font-size:11px;color:#969ca4;display:block;margin-bottom:3px}
 .panel input[type=text],.panel input[type=password]{width:100%;background:rgba(0,0,0,.32);
@@ -217,6 +241,7 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
   .count b{font-size:18px}
   .submit{padding:10px;font-size:13.5px}
   .undo{margin-top:5px;font-size:11.5px;padding:3px}
+  .errline{font-size:10.5px;padding:8px 10px;margin-top:7px}
   #upcomingPanel,#histPanel,#settings,.foot{display:none}
 }
 </style>
@@ -286,17 +311,22 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
       <p class="why">這個網頁是給大家<b>一起即時投票</b>用的，所以票數必須存在一個共用的地方。沒有它的話，你只會看到自己那一票，投票也就沒有意義了。</p>
       <ol>
         <li>到 <code>console.firebase.google.com</code> 建一個專案</li>
-        <li><b>Build → Realtime Database → 建立資料庫</b>，位置選 <code>asia-southeast1</code>，模式選<b>鎖定</b></li>
-        <li>到<b>規則</b>分頁貼上 README 裡那段規則並發布</li>
+        <li><b>Build → Realtime Database</b>，位置選 <code>asia-southeast1</code>，模式選<b>鎖定</b></li>
+        <li>到<b>規則</b>分頁，整份取代成 <code>database.rules.json</code> 的內容，按<b>發布</b></li>
         <li><b>專案設定 → 一般 → 新增網頁應用程式</b>，把 <code>apiKey</code> 和資料庫網址填進 <code>index.html</code> 最上面的 <code>FIREBASE</code>，重新部署</li>
       </ol>
       <p class="why" style="margin-bottom:0">想先試試看的話，也可以展開下面的「設定」暫時填進去 —— 但那只存在你這台裝置，正式上線還是要寫進原始碼，別人打開才會生效。</p>
     </div>
+
+    <div class="errline" id="errLine" hidden></div>
   </div>
 
+  <!-- 站別班次查詢 -->
   <div class="panel" id="upcomingPanel">
-    <h3>大橋頭站 北向 接下來</h3>
+    <h3>我在哪一站</h3>
+    <select class="sel" id="stationSel" aria-label="選擇你所在的車站"></select>
     <div class="upcoming" id="upcoming"></div>
+    <p class="upnote" id="upNote"></p>
   </div>
 
   <div class="panel" id="tdxBoard" hidden>
@@ -333,7 +363,7 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
         <div><label>TDX Client ID</label><input type="text" id="tdxId" spellcheck="false" autocapitalize="off"></div>
         <div style="margin-top:9px"><label>TDX Client Secret</label><input type="password" id="tdxSec"></div>
         <div style="margin-top:9px"><label>Proxy 前綴（繞過 CORS）</label><input type="text" id="tdxProxy" spellcheck="false" autocapitalize="off"></div>
-        <p class="hint" style="margin-top:9px">⚠️ secret 放前端等於公開，只用測試金鑰。瀏覽器直打 TDX 多半被 CORS 擋，需自架 proxy。抓不到會自動退回內建時刻表。</p>
+        <p class="hint" style="margin-top:9px">⚠️ secret 只存在你這台裝置，但前端沒有秘密可言，只用測試金鑰。瀏覽器直打 TDX 多半被 CORS 擋，需自架 proxy。</p>
       </div>
       <button class="btn" id="saveBtn">儲存並重新載入</button>
     </div>
@@ -353,10 +383,11 @@ h1{font-size:clamp(20px,5.6vw,24px);font-weight:800;text-align:center;margin:0 0
 /* ═══════════════════════════════════════════════════════════
    ★ 部署前把這兩個值填好，所有人才會共用同一份票數 ★
    Firebase 主控台 → 專案設定 → 一般 → 你的應用程式
+   （這兩個值本來就是公開的，安全性靠資料庫規則，不是靠藏金鑰）
    ═══════════════════════════════════════════════════════════ */
 const FIREBASE = {
-  databaseURL: "https://metro-voting-default-rtdb.asia-southeast1.firebasedatabase.app",   // 例：https://your-project-default-rtdb.asia-southeast1.firebasedatabase.app
-  apiKey:      "AIzaSyB0UEnOAwEgu8iGYjqFlA0YVQmGCWts9sM",   // 例：AIzaSy...
+  databaseURL: "",   // 例：https://your-project-default-rtdb.asia-southeast1.firebasedatabase.app
+  apiKey:      "",   // 例：AIzaSy...
 };
 
 /* ═══════════ 0. 設定與工具 ═══════════ */
@@ -365,7 +396,6 @@ const LS={
   get:(k,d='')=>{try{return localStorage.getItem(PFX+k) ?? d}catch(e){return d}},
   set:(k,v)=>{try{localStorage.setItem(PFX+k,v)}catch(e){}},
 };
-// localStorage 只作為本機覆寫，正式值來自上面的 FIREBASE
 const CFG={
   fbUrl: LS.get('fbUrl') || FIREBASE.databaseURL,
   fbKey: LS.get('fbKey') || FIREBASE.apiKey,
@@ -373,11 +403,16 @@ const CFG={
   demo: LS.get('demo')==='1',
 };
 let UID=LS.get('uid');
-if(!UID){ UID='u'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4); LS.set('uid',UID); }
+if(!/^u[a-z0-9]{6,20}$/.test(UID)){ UID='u'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4); LS.set('uid',UID); }
 
 const VOTE_CLOSE_LEAD=30;   // 發車前 30 秒截止
 const RESULT_HOLD=45;       // 發車後續顯示結果 45 秒
 const DEMO_ROUND=45;
+const MAX_HISTORY_ROWS=400;
+
+/* 任何要塞進 innerHTML 的字串都必須先過這一關 */
+const ESC={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ESC[c]);
 
 /* ═══════════ 1. 大橋頭站北向時刻表（L=往蘆洲 H=往迴龍）
    來源：臺北捷運官方大橋頭站時刻表，2026-05-11 生效
@@ -389,6 +424,16 @@ const TT={
 };
 const parseTT=s=>s.split(',').map(x=>({h:+x.slice(0,2),m:+x.slice(2,4),dest:x[4]}));
 const TTP={weekday:parseTT(TT.weekday), holiday:parseTT(TT.holiday)};
+
+/* 各站到大橋頭的北向行駛時間（分）。
+   由官方各站時刻表實測：南勢角 26、古亭 16、忠孝新生 10、行天宮 6、大橋頭 0，
+   其餘依站距內插。用途只是把大橋頭的時刻換算回你所在的站，
+   誤差約 ±2 分；「往哪裡」是照官方時刻表逐班對應，不受誤差影響。 */
+const STATIONS=[
+  ['O01','南勢角',26],['O02','景安',24],['O03','永安市場',21],['O04','頂溪',19],
+  ['O05','古亭',16],['O06','東門',13],['O07','忠孝新生',10],['O08','松江南京',8],
+  ['O09','行天宮',6],['O10','中山國小',4],['O11','民權西路',2],['O12','大橋頭',0],
+];
 
 const pad=n=>String(n).padStart(2,'0');
 const ymd=d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
@@ -409,6 +454,8 @@ function departures(now){
     return {at,dest:t.dest};
   });
 }
+const roundIdOf = at => ymd(at)+'-'+pad(at.getHours())+pad(at.getMinutes());
+
 function currentRound(now=new Date()){
   if(CFG.demo){
     const n=Math.floor(now.getTime()/1000/DEMO_ROUND), at=new Date((n+1)*DEMO_ROUND*1000);
@@ -418,22 +465,46 @@ function currentRound(now=new Date()){
   for(const d of departures(now)){
     const endAt=new Date(+d.at+RESULT_HOLD*1000);
     if(now<endAt) return {
-      id:ymd(d.at)+'-'+pad(d.at.getHours())+pad(d.at.getMinutes()),
-      at:d.at, dest:d.dest, demo:false,
+      id:roundIdOf(d.at), at:d.at, dest:d.dest, demo:false,
       closeAt:new Date(+d.at-VOTE_CLOSE_LEAD*1000), endAt,
     };
   }
   return null;
 }
-const upcoming=(now,n=3)=>departures(now).filter(d=>d.at>now).slice(0,n);
 
-/* ═══════════ 2. 共用資料庫（Firebase Realtime Database）
+/** 某一站接下來的北向班次：把大橋頭的時刻往回推 offset 分鐘 */
+function upcomingAt(now, offset, n=3){
+  const open=serviceDay(now); open.setHours(6,0,0,0);   // 各站首班都是 06:00
+  return departures(now)
+    .map(d=>({ dep:d.at, at:new Date(+d.at - offset*60000), dest:d.dest }))
+    .filter(x=> x.at>=open && +x.at > +now - 30000)
+    .slice(0,n);
+}
+
+/* ═══════════ 2. 錯誤顯示（手機沒有主控台可看） ═══════════ */
+let lastErr='';
+const ERR_HINT={
+  'PERMISSION_DENIED':'資料庫規則拒絕了這個動作。到 Firebase → Realtime Database → 規則，確認整份只有一個 JSON 物件、內容是 database.rules.json、而且已經按過「發布」。',
+  'permission_denied':'資料庫規則拒絕了這個動作。到 Firebase → Realtime Database → 規則，確認整份只有一個 JSON 物件、內容是 database.rules.json、而且已經按過「發布」。',
+  'Database URL':'databaseURL 填錯了。要用資料庫網址（結尾是 .firebasedatabase.app），不是 .firebaseapp.com。',
+  'api-key':'apiKey 填錯了。到 Firebase → 專案設定 → 一般 → 你的應用程式重新抄一次。',
+};
+function showErr(title, e){
+  const msg = e?.code || e?.message || String(e||'');
+  lastErr = `${title}｜${msg}`;
+  let hint='';
+  for(const k in ERR_HINT) if(msg.includes(k)){ hint=ERR_HINT[k]; break; }
+  $('errLine').hidden=false;
+  $('errLine').innerHTML = `<b>${esc(title)}</b>${esc(msg)}` + (hint?`<br><br>${esc(hint)}`:'');
+}
+function clearErr(){ $('errLine').hidden=true; lastErr=''; }
+
+/* ═══════════ 3. 共用資料庫（Firebase Realtime Database）
    ── 為什麼是「計數器」而不是「同步整份名單」 ──
    Realtime Database 的監聽是：該節點一有變動，就把「整份資料」推給
-   所有監聽者。如果大家都監聽整份票單，流量會是人數的三次方，
-   幾十個人同時投票就會把免費額度燒光。
+   所有監聽者。如果大家都監聽整份票單，流量會是人數的三次方。
    所以這裡只同步兩個數字 tally={L,H}（用 transaction 累加），
-   每個人另外只讀自己那一格 votes/<uid> 來記住自己投了什麼。
+   每個人另外只讀自己那一格 votes/<uid>。
    ═══════════ */
 const Store={
   ready:false, err:null, ROOT:'luzhouVote',
@@ -450,7 +521,8 @@ const Store={
       return true;
     }catch(e){
       console.error('Firebase 初始化失敗',e);
-      this.err=e.message||'連線失敗';
+      this.err=e.code||e.message||'連線失敗';
+      showErr('連不上共用資料庫', e);
       return false;
     }
   },
@@ -458,44 +530,45 @@ const Store={
   /** 把票數搬一格：prev→null 代表新投，next→null 代表取消 */
   async move(rid, prev, next){
     if(prev===next) return;
-    await this.runTransaction(this.ref(this.db,`${this.ROOT}/rounds/${rid}/tally`), t=>{
-      t = t || {L:0,H:0};
-      if(prev) t[prev]=Math.max(0,(t[prev]||0)-1);
-      if(next) t[next]=(t[next]||0)+1;
-      return t;
+    const tallyRef=this.ref(this.db,`${this.ROOT}/rounds/${rid}/tally`);
+    const bump=(p,n)=>this.runTransaction(tallyRef, t=>{
+      const o={L:Math.max(0,Math.floor(+((t||{}).L)||0)), H:Math.max(0,Math.floor(+((t||{}).H)||0))};
+      if(p) o[p]=Math.max(0,o[p]-1);
+      if(n) o[n]=o[n]+1;
+      return o;
     });
+    await bump(prev,next);
     try{
       const me=this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes/${UID}`);
       if(next) await this.set(me,next); else await this.remove(me);
     }catch(e){
-      // 記錄自己那票失敗就把計數器搬回去，避免票數浮報
-      await this.runTransaction(this.ref(this.db,`${this.ROOT}/rounds/${rid}/tally`), t=>{
-        t = t || {L:0,H:0};
-        if(next) t[next]=Math.max(0,(t[next]||0)-1);
-        if(prev) t[prev]=(t[prev]||0)+1;
-        return t;
-      });
+      await bump(next,prev).catch(()=>{});   // 失敗就把計數器搬回去
       throw e;
     }
   },
 
   /** 只監聽兩個數字，不是整份票單 */
   watchTally(rid,cb){
-    return this.onValue(this.ref(this.db,`${this.ROOT}/rounds/${rid}/tally`),s=>{
-      const v=s.val()||{};
-      cb({L:+v.L||0, H:+v.H||0});
-    });
+    return this.onValue(this.ref(this.db,`${this.ROOT}/rounds/${rid}/tally`),
+      s=>{ const v=s.val()||{};
+           cb({L:Math.max(0,Math.floor(+v.L||0)), H:Math.max(0,Math.floor(+v.H||0))}); },
+      e=>showErr('讀取票數失敗', e));
   },
-  /** 只讀自己那一格 */
   watchMine(rid,cb){
-    return this.onValue(this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes/${UID}`),s=>cb(s.val()||null));
+    return this.onValue(this.ref(this.db,`${this.ROOT}/rounds/${rid}/votes/${UID}`),
+      s=>{ const v=s.val(); cb(v==='L'||v==='H' ? v : null); },
+      e=>showErr('讀取自己的票失敗', e));
   },
 
   saveHistory(rid,rec){ return this.set(this.ref(this.db,`${this.ROOT}/history/${rec.day}/${rid}`),rec); },
-  watchHistory(day,cb){ return this.onValue(this.ref(this.db,`${this.ROOT}/history/${day}`),s=>cb(s.val()||{})); },
+  watchHistory(day,cb){
+    return this.onValue(this.ref(this.db,`${this.ROOT}/history/${day}`),
+      s=>cb(s.val()||{}),
+      e=>showErr('讀取開票紀錄失敗', e));
+  },
 };
 
-/* ═══════════ 3. TDX（隱藏功能，網址加 #tdx） ═══════════ */
+/* ═══════════ 4. TDX（隱藏功能，網址加 #tdx） ═══════════ */
 const TDX={
   token:null, exp:0,
   url(u){ return CFG.proxy ? CFG.proxy+u : u; },
@@ -516,7 +589,7 @@ const TDX={
     if(!r.ok) throw new Error('LiveBoard 回應 '+r.status);
     const j=await r.json();
     const arr=Array.isArray(j)?j:(j.MetroLiveBoards||j.LiveBoards||[]);
-    return arr.map(x=>{
+    return arr.slice(0,20).map(x=>{
       const head=x.TripHeadSign||x.DestinationStationName?.Zh_tw||x.DestinationStationID||x.TrainNumber||'';
       const est=x.EstimateTime??x.EstimatedTime??null, st=x.ServiceStatus;
       let text;
@@ -524,12 +597,12 @@ const TDX={
       else if(st===1) text='進站中';
       else if(st===2) text='離站';
       else text = x.UpdateTime ? String(x.UpdateTime).slice(11,16) : '—';
-      return {dest:String(head),text};
+      return {dest:String(head).slice(0,30), text:String(text).slice(0,20)};
     }).filter(x=>x.dest);
   },
 };
 
-/* ═══════════ 4. UI ═══════════ */
+/* ═══════════ 5. UI ═══════════ */
 const $=id=>document.getElementById(id);
 const NAME={L:'蘆洲',H:'迴龍'};
 let round=null, picked=null, myVote=null, tally={L:0,H:0};
@@ -539,12 +612,10 @@ function renderTally(){
   const {L,H}=tally, total=L+H;
   const pL = total ? L/total*100 : 50;
   const pLr= total ? Math.round(pL) : 0;
-
   $('numL').textContent=L; $('numH').textContent=H;
   $('numMid').textContent = total ? `即時票數・共 ${total} 票` : '還沒有人投票';
   $('segL').style.width=pL+'%'; $('segH').style.width=(100-pL)+'%';
   $('tallyLive').classList.toggle('zero', total===0);
-
   $('rNumL').textContent=L; $('rNumH').textContent=H;
   $('rNumMid').textContent=`共 ${total} 票`;
   $('rSegL').style.width=pL+'%'; $('rSegH').style.width=(100-pL)+'%';
@@ -552,7 +623,6 @@ function renderTally(){
   $('tallyRes').classList.toggle('zero', total===0);
 }
 
-/** 依 myVote / picked 更新按鈕外觀 */
 function syncButtons(){
   const sel = picked || myVote;
   $('optL').setAttribute('aria-checked',String(sel==='L'));
@@ -574,22 +644,20 @@ $('optH').addEventListener('click',()=>pick('H'));
 $('submitBtn').addEventListener('click',async()=>{
   if(!picked||!round) return;
   const b=$('submitBtn'); b.disabled=true; b.textContent='送出中…';
-  const prev=myVote, next=picked;
   try{
-    await Store.move(round.id, prev, next);
-    myVote=next; syncButtons();
+    await Store.move(round.id, myVote, picked);
+    myVote=picked; clearErr(); syncButtons();
   }catch(e){
-    console.error(e);
+    console.error(e); showErr('投票送出失敗', e);
     b.className='submit on'; b.disabled=false; b.textContent='送出失敗，再按一次';
   }
 });
 $('undoBtn').addEventListener('click',async()=>{
   if(!round||!myVote) return;
-  const prev=myVote;
   try{
-    await Store.move(round.id, prev, null);
-    myVote=null; picked=null; syncButtons();
-  }catch(e){ console.error(e); }
+    await Store.move(round.id, myVote, null);
+    myVote=null; picked=null; clearErr(); syncButtons();
+  }catch(e){ console.error(e); showErr('取消投票失敗', e); }
 });
 
 function switchRound(r){
@@ -633,12 +701,21 @@ function showResult(){
   if(!round.demo && savedFor!==round.id && total>0){
     savedFor=round.id;
     Store.saveHistory(round.id,{day:ymd(serviceDay(round.at)),t:hm(round.at),L,H,dest:actual,win:winner||'-'})
-      .catch(e=>console.warn('寫入歷史失敗',e));
+      .catch(e=>console.warn('寫入歷史失敗（可能已有人寫過）',e));
   }
 }
 
+/* 資料庫的內容一律當成不可信：先驗形狀，再跳脫，才敢進 innerHTML */
+const validRow = r =>
+  r && typeof r==='object'
+  && typeof r.t==='string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(r.t)
+  && (r.win==='L'||r.win==='H'||r.win==='-')
+  && (r.dest==='L'||r.dest==='H')
+  && Number.isFinite(+r.L) && Number.isFinite(+r.H) && +r.L>=0 && +r.H>=0;
+
 function renderHistory(obj){
-  const rows=Object.values(obj||{}).sort((a,b)=>(b.t||'').localeCompare(a.t||''));
+  const rows=Object.values(obj||{}).filter(validRow)
+    .sort((a,b)=>b.t.localeCompare(a.t)).slice(0,MAX_HISTORY_ROWS);
   let wl=0,wh=0;
   rows.forEach(r=>{ if(r.win==='L')wl++; else if(r.win==='H')wh++; });
   $('winL').textContent=wl; $('winH').textContent=wh;
@@ -646,19 +723,52 @@ function renderHistory(obj){
     ? rows.map(r=>{
         const w=r.win==='-'?'平手':`往${NAME[r.win]}`;
         const mark=r.win==='-'?'':(r.win===r.dest?'　✓ 命中':'　✗ 落空');
-        return `<div class="hrow"><span class="tm">${r.t}</span>`
-             + `<span class="w ${r.win==='-'?'':r.win}">${w}${mark}</span>`
-             + `<span class="n">${r.L}:${r.H}</span></div>`;
+        return `<div class="hrow"><span class="tm">${esc(r.t)}</span>`
+             + `<span class="w ${r.win==='-'?'':esc(r.win)}">${esc(w+mark)}</span>`
+             + `<span class="n">${Math.floor(+r.L)}:${Math.floor(+r.H)}</span></div>`;
       }).join('')
     : '<div class="empty">今天還沒有開票紀錄</div>';
 }
 
+/* ── 站別班次 ── */
+let station = STATIONS.find(s=>s[0]===LS.get('station')) || STATIONS[STATIONS.length-1];
+/* 站名是程式內建的常數，但一律照規矩跳脫，維持「進 innerHTML 前必經 esc()」這條不變量 */
+$('stationSel').innerHTML = STATIONS.map(s=>
+  `<option value="${esc(s[0])}"${s[0]===station[0]?' selected':''}>${esc(s[0]+' '+s[1])}</option>`).join('');
+$('stationSel').addEventListener('change',e=>{
+  station = STATIONS.find(s=>s[0]===e.target.value) || station;
+  LS.set('station', station[0]);
+  lastUpcoming=''; tick();
+});
+
 function renderUpcoming(now){
-  const list=upcoming(now,3);
-  $('upcoming').innerHTML = list.length
-    ? list.map((d,i)=>`<div class="up ${d.dest}"><div class="k">${i===0?'下一班':'第 '+(i+1)+' 班'}</div>`
-        +`<div class="t">${hm(d.at)}</div><div class="d">往${NAME[d.dest]}</div></div>`).join('')
-    : '<div class="empty">今日已收班</div>';
+  const [code,name,off]=station;
+  const list=upcomingAt(now, off, 3);
+  $('upcomingPanel').querySelector('h3').textContent = `${name} 站　往蘆洲／迴龍 方向`;
+  if(!list.length){
+    $('upcoming').innerHTML='<div class="empty">今日已收班</div>';
+    $('upNote').textContent='';
+    return;
+  }
+  const cur = round && !round.demo ? round.id : null;
+  $('upcoming').innerHTML = list.map((x,i)=>{
+    const mins=Math.max(0,Math.round((x.at-now)/60000));
+    const isNow = cur && roundIdOf(x.dep)===cur;
+    return `<div class="up ${x.dest}${isNow?' now':''}">`
+      + `<div class="k">${i===0?'下一班':'第 '+(i+1)+' 班'}</div>`
+      + `<div class="t">${hm(x.at)}</div>`
+      + `<div class="d">往${NAME[x.dest]}</div>`
+      + `<div class="m">${mins===0?'即將進站':'約 '+mins+' 分'}</div>`
+      + (isNow?'<span class="badge">投票中</span>':'')
+      + `</div>`;
+  }).join('');
+  const first=list[0];
+  const isNow = cur && roundIdOf(first.dep)===cur;
+  $('upNote').textContent = off===0
+    ? '時間為官方時刻表。若已在車上，請選下一站。'
+    : (isNow
+        ? `你這班就是現在投票的這輪（大橋頭 ${hm(first.dep)} 發車）。時間為推算，誤差約 ±2 分。`
+        : `你這班對應大橋頭 ${hm(first.dep)} 那一輪。時間為推算，誤差約 ±2 分；方向依官方時刻表。若已在車上，請選下一站。`);
 }
 
 /* ── 主迴圈 ── */
@@ -672,7 +782,7 @@ function tick(){
       $('subtitle').innerHTML='今日已收班（末班 00:48）。<br>想繼續玩可以到下面「設定」打開示範模式。';
       $('pDay').textContent='收班中';
     }else{
-      if(!round||round.id!==r.id) switchRound(r);
+      if(!round||round.id!==r.id){ switchRound(r); lastUpcoming=''; }
       $('pDay').textContent = r.demo?'示範模式':(isHoliday(serviceDay(now))?'假日班表':'平日班表');
       if(now<round.closeAt){
         const s=Math.max(0,Math.ceil((round.closeAt-now)/1000));
@@ -692,7 +802,7 @@ function tick(){
       unHist=Store.watchHistory(day,renderHistory);
     }
   }
-  const sig=upcoming(now,3).map(d=>hm(d.at)+d.dest).join();
+  const sig=station[0]+'|'+upcomingAt(now,station[2],3).map(d=>hm(d.at)+d.dest).join()+'|'+(round?round.id:'');
   if(sig!==lastUpcoming){ lastUpcoming=sig; renderUpcoming(now); }
 }
 
@@ -703,12 +813,12 @@ async function pollTDX(){
     $('pSrc').textContent='TDX 即時看板'; $('pSrc').className='pill ok';
     $('tdxBoard').hidden=false;
     $('boardBody').innerHTML = rows.length
-      ? rows.map(r=>`<div class="row2"><span class="d">${r.dest}</span><span class="t">${r.text}</span></div>`).join('')
+      ? rows.map(r=>`<div class="row2"><span class="d">${esc(r.dest)}</span><span class="t">${esc(r.text)}</span></div>`).join('')
       : '<div class="row2"><span class="d">目前沒有回傳班次</span></div>';
   }catch(e){
     $('pSrc').textContent='TDX 失敗・用內建時刻表'; $('pSrc').className='pill warn';
     $('tdxBoard').hidden=false;
-    $('boardBody').innerHTML=`<div class="row2"><span class="d">${e.message}</span></div>`
+    $('boardBody').innerHTML=`<div class="row2"><span class="d">${esc(e.message)}</span></div>`
       +`<div class="row2"><span class="d" style="color:#868c94;font-weight:400">多半是 CORS，設定裡填 proxy 前綴可解。投票仍依內建時刻表運作。</span></div>`;
   }
 }
@@ -735,9 +845,11 @@ function renderDiag(){
     `devicePixelRatio   ${devicePixelRatio}`,
     `orientation        ${screen.orientation?.type ?? '—'}`,
     `db ready           ${Store.ready}${Store.err?' ('+Store.err+')':''}`,
+    `station            ${station[0]} ${station[1]} (offset ${station[2]}m)`,
     `round              ${round?round.id:'—'}`,
     `tally              L=${tally.L} H=${tally.H} me=${myVote??'—'}`,
     `uid                ${UID}`,
+    `last error         ${lastErr||'—'}`,
   ].join('\n');
 }
 
